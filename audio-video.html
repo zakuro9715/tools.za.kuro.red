@@ -193,7 +193,7 @@
           </div>
           <a id="downloadLink" href="#" download="visual-audio.webm" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/20 text-center flex items-center justify-center gap-2 transition-all">
             <i data-lucide="download" class="w-4 h-4"></i>
-            <span id="downloadBtnText">動画を保存 (.mp4 / .webm)</span>
+            <span id="downloadBtnText">動画を保存 (.webm)</span>
           </a>
         </div>
       </div>
@@ -241,6 +241,16 @@
         </div>
       </div>
 
+      <div class="glass-morphism rounded-2xl p-5 border border-slate-900 space-y-4">
+        <h3 class="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+          <i data-lucide="code" class="w-4 h-4 text-indigo-400"></i>
+          <span>3. 変換</span>
+        </h3>
+
+        <div class="space-y-3">
+          <pre class="text-sm text-slate-400 leading-relaxed"><code>ffmpeg -i name.webm out.mp4</code></pre>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -288,7 +298,7 @@
     let recordedChunks = [];
     let recordStartTime = 0;
     
-    // テキストステート
+    // テキストステート (デフォルト値を変更)
     let songTitle = "noname";
     let artistName = "";
 
@@ -307,14 +317,19 @@
     // ----------------------------------------------------
     // アーティスト名のLocalStorage永続化
     const inputArtistName = document.getElementById('inputArtistName');
+    const inputSongTitle = document.getElementById('inputSongTitle');
     const savedArtist = localStorage.getItem('audiovideo_saved_artist');
+    
     if (savedArtist) {
       artistName = savedArtist;
       inputArtistName.value = savedArtist;
     } else {
-      artistName = "Spectrum Producer";
+      artistName = "";
       inputArtistName.value = artistName;
     }
+
+    // 曲名の初期入力バインド
+    inputSongTitle.value = songTitle;
 
     // SoundCloud風用の仮のダミー波形
     function generateDummyWaveform() {
@@ -341,9 +356,6 @@
     const btnMute = document.getElementById('btnMute');
     const volumeIcon = document.getElementById('volumeIcon');
     const trackTitle = document.getElementById('trackTitle');
-    
-    // 追加UI
-    const inputSongTitle = document.getElementById('inputSongTitle');
 
     // 録画系UI
     const btnRecord = document.getElementById('btnRecord');
@@ -359,14 +371,14 @@
     const browserCompatibilityInfo = document.getElementById('browserCompatibilityInfo');
     const downloadBtnText = document.getElementById('downloadBtnText');
 
-    // 互換性チェック表示
+    // 互換性チェック表示 (WebM対応状況チェック)
     function updateCompatibilityUI() {
-      const mp4Supported = MediaRecorder.isTypeSupported('video/mp4') || MediaRecorder.isTypeSupported('video/mp4;codecs=h264');
+      const webmSupported = MediaRecorder.isTypeSupported('video/webm');
       let statusStr = "ブラウザ書き出し環境: ";
-      if (mp4Supported) {
-        statusStr += "MP4 ネイティブ対応";
+      if (webmSupported) {
+        statusStr += "WebM動画出力対応";
       } else {
-        statusStr += "MP4非対応 (高品質WebMとして保存)";
+        statusStr += "WebM非対応 (非互換ブラウザ)";
       }
       browserCompatibilityInfo.textContent = statusStr;
     }
@@ -408,13 +420,13 @@
 
     // テキスト変更リスナー
     inputSongTitle.addEventListener('input', () => {
-      songTitle = inputSongTitle.value || "Awesome Track";
+      songTitle = inputSongTitle.value || "noname";
       if (!isPlaying) requestAnimationFrame(drawVisualizer);
     });
     
     // アーティスト名変更＆LocalStorage永続化
     inputArtistName.addEventListener('input', () => {
-      artistName = inputArtistName.value || "Spectrum Producer";
+      artistName = inputArtistName.value || "";
       localStorage.setItem('audiovideo_saved_artist', artistName);
       if (!isPlaying) requestAnimationFrame(drawVisualizer);
     });
@@ -526,6 +538,7 @@
       requestAnimationFrame(drawVisualizer);
     }
 
+    // 一時停止
     function pauseAudio() {
       if (!isPlaying) return;
       
@@ -539,6 +552,7 @@
       lucide.createIcons();
     }
 
+    // 停止
     function stopAudio() {
       isPlaying = false;
       pausedAt = 0;
@@ -695,7 +709,7 @@
     }
 
     // ----------------------------------------------------
-    // SoundCloud 風描画ロジック (上下のリアルタイムな揺れ・ピクピク跳ねる演出を完全に削除)
+    // SoundCloud 風描画ロジック (上下のリアルタイムな揺れを完全に削除)
     // ----------------------------------------------------
     function drawSoundCloudMode(dataArray, bufferLength) {
       ctx.save();
@@ -712,12 +726,19 @@
       // 1. 曲情報テキスト (アーティスト名 & トラックタイトルを左寄せでレイアウト)
       ctx.save();
       
-      // アーティスト名
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-      ctx.font = '500 36px "Inter", "Noto Sans JP", sans-serif';
-      ctx.fillText(artistName, textX, textY);
+      // アーティスト名 (空文字列の場合は描画位置を調整)
+      let offsetHeight = 0;
+      if (artistName && artistName.trim() !== "") {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.font = '500 36px "Inter", "Noto Sans JP", sans-serif';
+        ctx.fillText(artistName, textX, textY);
+        offsetHeight = 110;
+      } else {
+        // アーティスト名が空欄の場合は、曲名の描画ベース高さを基準位置まで引き上げる
+        offsetHeight = 40;
+      }
       
-      // トラック名 (ボールドで引き立つ高品位表示)
+      // トラック名
       ctx.fillStyle = '#ffffff';
       ctx.font = '900 84px "Inter", "Noto Sans JP", sans-serif';
       let displayTitle = songTitle;
@@ -725,12 +746,11 @@
       if (ctx.measureText(displayTitle).width > (CANVAS_WIDTH - 280)) {
         ctx.font = '900 64px "Inter", "Noto Sans JP", sans-serif';
       }
-      ctx.fillText(displayTitle, textX, textY + 110);
+      ctx.fillText(displayTitle, textX, textY + offsetHeight);
 
       ctx.restore();
 
       // 2. 静的な全体のオーディオ波形シーク表示 (下部)
-      // リアルタイムの音量の跳ねを完全に排除し、滑らかで整った波形分布を静止表示します。
       const waveX = 140;
       const waveY = 820; 
       const waveWidth = CANVAS_WIDTH - 280;
@@ -750,7 +770,7 @@
           ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         }
 
-        // 音声デコードで得られた「100%静的な波形形状プロファイル」のみを使用（リアルタイムの跳ねは加算しない）
+        // 音声デコードで得られた「100%静的な波形形状プロファイル」のみを使用
         const staticVal = waveformData[i] || 0;
         const currentBarHeight = staticVal * 0.75 * maxWaveHeight;
 
@@ -793,18 +813,15 @@
     }
 
     // ----------------------------------------------------
-    // ビデオ録画 / エクスポート機能 (シングルMP4出力)
+    // ビデオ録画 / エクスポート機能 (WebM出力のみに限定)
     // ----------------------------------------------------
     function getBestSupportedMimeType() {
-      const mp4Types = [
-        'video/mp4;codecs=h264,aac',
-        'video/mp4;codecs=h264',
-        'video/mp4',
+      const webmTypes = [
         'video/webm;codecs=vp9,opus',
         'video/webm;codecs=vp8,opus',
         'video/webm'
       ];
-      for (const type of mp4Types) {
+      for (const type of webmTypes) {
         if (MediaRecorder.isTypeSupported(type)) return type;
       }
       return 'video/webm';
@@ -840,7 +857,7 @@
       canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
 
       const targetMimeType = getBestSupportedMimeType();
-      const fileExt = targetMimeType.includes('video/mp4') ? 'mp4' : 'webm';
+      const fileExt = 'webm';
       const options = targetMimeType ? { mimeType: targetMimeType } : {};
 
       try {
