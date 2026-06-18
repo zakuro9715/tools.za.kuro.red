@@ -13,7 +13,7 @@
   <style>
     body {
       font-family: 'Inter', 'Noto Sans JP', sans-serif;
-      background-color: #080b11;
+      background-color: #060911;
       color: #e2e8f0;
     }
     .font-mono-custom {
@@ -36,7 +36,7 @@
     }
     /* ぼかし背景 */
     .glass-morphism {
-      background: rgba(13, 18, 30, 0.8);
+      background: rgba(10, 15, 28, 0.85);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -55,13 +55,13 @@
         <h1 class="text-xl font-bold tracking-wider text-white flex items-center gap-2">
           <span>AudioVideo</span>
         </h1>
-        <p class="text-[10px] text-slate-400">High-Fidelity Audio Visualizer & Video Generator</p>
+        <p class="text-[10px] text-slate-400 font-medium tracking-wider">High-Fidelity Audio Visualizer & Video Generator</p>
       </div>
     </div>
     <div class="flex items-center space-x-4">
       <span class="text-xs text-slate-400 hidden sm:inline flex items-center gap-1">
         <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-400"></i>
-        音声付き動画・オーディオファイルをブラウザで録画・保存できます
+        音声付きの高画質な波形動画を直接ブラウザで出力できます
       </span>
     </div>
   </header>
@@ -94,7 +94,7 @@
           <!-- 録画中ステータスバッジ -->
           <div id="recordingBadge" class="absolute top-4 left-4 bg-rose-600/95 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg shadow-rose-600/20 hidden animate-pulse z-20">
             <span class="w-2.5 h-2.5 bg-white rounded-full"></span>
-            <span>REC: 保存用に収録中...</span>
+            <span>REC: 動画保存用に収録中...</span>
           </div>
 
           <!-- 音声解析エラーなどのアラート -->
@@ -145,36 +145,20 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-900 pb-3">
           <h3 class="text-sm font-semibold text-white flex items-center gap-2">
             <i data-lucide="video" class="w-4 h-4 text-indigo-400"></i>
-            <span>高画質エクスポート設定</span>
+            <span>高画質エクスポート</span>
           </h3>
           <span class="text-[10px] text-slate-500" id="browserCompatibilityInfo">互換性チェック中...</span>
         </div>
-        
-        <!-- エクスポートオプションの設定 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="text-xs text-slate-400 block mb-1.5 font-medium">出力ファイル形式</label>
-            <select id="exportFormatSelect" class="w-full bg-slate-900 border border-slate-800 text-slate-300 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer">
-              <option value="mp4" selected>動画ファイル (MP4 / WebM互換)</option>
-              <option value="m4a">音声のみ (M4A / WebMオーディオ互換)</option>
-            </select>
-          </div>
-          <div class="flex flex-col justify-end">
-            <p class="text-[10px] text-slate-500 leading-relaxed">
-              ※ブラウザ規格上、MP4/M4A出力が直接サポートされていない環境（Chrome/Firefox等）では、最も互換性の高い高画質WebM形式へ自動調整して保存されます。
-            </p>
-          </div>
-        </div>
 
         <p class="text-xs text-slate-400 leading-relaxed">
-          現在表示されているビジュアライザーの映像と、クリアな内部音声を合流させてファイルを生成します。開始すると最初から最後まで自動再生され、終了後に保存リンクが表示されます。
+          表示されているビジュアライザーの映像と、クリアな内部デジタル音声を合流させて高画質動画ファイルを生成します。開始すると最初から最後まで自動再生され、終了後に保存リンクが表示されます。
         </p>
 
         <div class="flex flex-wrap items-center gap-4 pt-2">
           <button id="btnRecord" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/10 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
             <span class="w-2.5 h-2.5 bg-white rounded-full animate-ping" id="recPulse" style="display:none;"></span>
             <i data-lucide="clapperboard" class="w-4 h-4"></i>
-            <span id="recordBtnText">録画・書き出しを開始する</span>
+            <span id="recordBtnText">動画の書き出しを開始する</span>
           </button>
 
           <button id="btnStopRecord" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition-all active:scale-95 flex items-center gap-2 hidden">
@@ -204,18 +188,18 @@
             </div>
             <div>
               <h4 class="text-sm font-semibold text-white">書き出しが完了しました！</h4>
-              <p class="text-xs text-slate-400">作成されたファイルを保存可能です。</p>
+              <p class="text-xs text-slate-400">作成された動画ファイルを保存可能です。</p>
             </div>
           </div>
           <a id="downloadLink" href="#" download="visual-audio.webm" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/20 text-center flex items-center justify-center gap-2 transition-all">
             <i data-lucide="download" class="w-4 h-4"></i>
-            <span id="downloadBtnText">保存する</span>
+            <span id="downloadBtnText">動画を保存 (.mp4 / .webm)</span>
           </a>
         </div>
       </div>
     </div>
 
-    <!-- 右側：カスタマイズパネル (4カラム) -->
+    <!-- 右側：設定パネル (4カラム) -->
     <div class="lg:col-span-4 space-y-6">
       
       <!-- ファイルアップロード -->
@@ -238,147 +222,14 @@
         </div>
       </div>
 
-      <!-- ビジュアライザー・スタイル設定 -->
+      <!-- 曲名・アーティスト名設定 -->
       <div class="glass-morphism rounded-2xl p-5 border border-slate-900 space-y-4">
         <h3 class="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-          <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i>
-          <span>2. ビジュアライザ設定</span>
-        </h3>
-
-        <!-- プリセットスタイル -->
-        <div>
-          <label class="text-xs text-slate-400 block mb-1.5 font-medium">スペクトラムの種類</label>
-          <div class="grid grid-cols-2 gap-2">
-            <button class="style-btn px-3 py-2 text-xs font-medium rounded-lg border border-indigo-500/20 bg-indigo-950/10 text-indigo-300 shadow-md transition-all flex items-center justify-center gap-1" data-style="bars">
-              <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
-              <span>ネオンバー</span>
-            </button>
-            <button class="style-btn px-3 py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1" data-style="radial">
-              <i data-lucide="circle-dot" class="w-3.5 h-3.5"></i>
-              <span>サークル</span>
-            </button>
-            <button class="style-btn px-3 py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1" data-style="particles">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-              <span>宇宙粒子</span>
-            </button>
-            <button class="style-btn px-3 py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1" data-style="synthwave">
-              <i data-lucide="grid-3x3" class="w-3.5 h-3.5"></i>
-              <span>レトロ波</span>
-            </button>
-            <button class="style-btn px-3 py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1" data-style="sine">
-              <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-              <span>リキッド</span>
-            </button>
-            <!-- SoundCloud風 -->
-            <button class="style-btn px-3 py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1" data-style="soundcloud">
-              <i data-lucide="waves" class="w-3.5 h-3.5 text-indigo-400"></i>
-              <span>SoundCloud風</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- カラーテーマ -->
-        <div>
-          <label class="text-xs text-slate-400 block mb-1.5 font-medium">カラーパレット</label>
-          <div class="grid grid-cols-4 gap-1.5">
-            <button class="color-theme-btn h-8 rounded-lg border border-transparent flex items-center justify-center cursor-pointer bg-gradient-to-r from-indigo-500 to-cyan-500 ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-950" data-theme="neon"></button>
-            <button class="color-theme-btn h-8 rounded-lg border border-slate-800 bg-gradient-to-r from-emerald-400 to-cyan-500" data-theme="aurora"></button>
-            <button class="color-theme-btn h-8 rounded-lg border border-slate-800 bg-gradient-to-r from-amber-400 to-rose-600" data-theme="sunset"></button>
-            <button class="color-theme-btn h-8 rounded-lg border border-slate-800 bg-gradient-to-r from-indigo-500 to-cyan-400" data-theme="cyberpunk"></button>
-          </div>
-        </div>
-
-        <!-- カスタム設定スライダー -->
-        <div class="space-y-3 pt-2 border-t border-slate-900">
-          <div>
-            <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-              <span>グロー（発光強度）</span>
-              <span id="valGlow" class="font-mono-custom text-slate-300">15px</span>
-            </div>
-            <input type="range" id="sliderGlow" min="0" max="30" value="15" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-          </div>
-
-          <div>
-            <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-              <span>ビジュアル感度</span>
-              <span id="valSensitivity" class="font-mono-custom text-slate-300">1.2x</span>
-            </div>
-            <input type="range" id="sliderSensitivity" min="0.5" max="2.5" step="0.1" value="1.2" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-          </div>
-
-          <div>
-            <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-              <span>解像度 (細かさ)</span>
-              <span id="valFft" class="font-mono-custom text-slate-300">中 (512)</span>
-            </div>
-            <input type="range" id="sliderFft" min="7" max="11" step="1" value="9" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-          </div>
-        </div>
-
-        <!-- オプションチェックボックス -->
-        <div class="space-y-2 pt-2 border-t border-slate-900 text-xs text-slate-300">
-          <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition-colors">
-            <input type="checkbox" id="checkParticles" checked class="rounded bg-slate-900 border-slate-800 text-indigo-500 focus:ring-0">
-            <span>背後に浮遊パーティクルを表示</span>
-          </label>
-          <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition-colors">
-            <input type="checkbox" id="checkMirror" checked class="rounded bg-slate-900 border-slate-800 text-indigo-500 focus:ring-0">
-            <span>スペクトラムを左右対称にする</span>
-          </label>
-          <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition-colors">
-            <input type="checkbox" id="checkBeatShake" checked class="rounded bg-slate-900 border-slate-800 text-indigo-500 focus:ring-0">
-            <span>低音で画面を軽く揺らす（ビートバウンス）</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- 背景スタイル -->
-      <div class="glass-morphism rounded-2xl p-5 border border-slate-900 space-y-3">
-        <h3 class="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-          <i data-lucide="image" class="w-4 h-4 text-indigo-400"></i>
-          <span>3. 背景デザイン</span>
-        </h3>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1.5 font-medium">背景スタイル</label>
-          <select id="bgStyleSelect" class="w-full bg-slate-900 border border-slate-800 text-slate-300 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer">
-            <option value="deepSpace">ディープスペース (超暗黒)</option>
-            <option value="cosmicBlue">コズミック・ブルー (青紫グラデーション)</option>
-            <option value="sunsetVibe">サンセット・バイブ (赤紫グラデーション)</option>
-            <option value="cyberGrid">サイバー・グリッド (電子格子状)</option>
-            <option value="neonFog">ネオン・フォグ (霧が揺らめく背景)</option>
-            <option value="artBlur" selected>アルバムアート (ぼかし)</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- アートワーク＆テキスト設定 -->
-      <div class="glass-morphism rounded-2xl p-5 border border-slate-900 space-y-4">
-        <h3 class="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-          <i data-lucide="disc" class="w-4 h-4 text-indigo-400 animate-spin"></i>
-          <span>4. アートワーク＆テキスト設定</span>
+          <i data-lucide="edit-3" class="w-4 h-4 text-indigo-400"></i>
+          <span>2. 曲情報の入力</span>
         </h3>
         
-        <!-- アートワーク画像アップロード -->
-        <div>
-          <label class="text-xs text-slate-400 block mb-1.5 font-medium">ジャケット画像</label>
-          <div class="border-2 border-dashed border-slate-800 hover:border-indigo-500/40 rounded-xl p-3 text-center cursor-pointer transition-all bg-slate-950/40 relative group" onclick="document.getElementById('artFileInput').click()">
-            <input type="file" id="artFileInput" accept="image/*" class="hidden">
-            <div class="space-y-1">
-              <i data-lucide="image-plus" class="w-6 h-6 text-slate-500 group-hover:text-indigo-400 mx-auto transition-colors"></i>
-              <div class="text-[11px] font-medium text-slate-300">画像を選択、またはドロップ</div>
-            </div>
-          </div>
-          <div id="artFileInfo" class="mt-2.5 p-2 bg-slate-950/60 border border-slate-800 rounded-lg text-xs flex items-center justify-between hidden">
-            <div class="flex items-center space-x-2 truncate">
-              <img id="artPreview" class="w-8 h-8 rounded object-cover border border-slate-700" src="">
-              <span id="artFileNameDisp" class="text-slate-300 truncate font-mono-custom text-[11px]">-</span>
-            </div>
-            <button id="btnRemoveArt" class="text-[10px] text-rose-400 hover:text-rose-300 underline font-medium">削除</button>
-          </div>
-        </div>
-
-        <!-- 曲名・アーティスト名の入力 -->
-        <div class="space-y-2.5 pt-2 border-t border-slate-900">
+        <div class="space-y-3">
           <div>
             <label class="text-xs text-slate-400 block mb-1 font-medium">曲名 (Title)</label>
             <input type="text" id="inputSongTitle" placeholder="My Awesome Track" class="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none">
@@ -437,48 +288,24 @@
     let recordedChunks = [];
     let recordStartTime = 0;
     
-    // アートワーク＆テキストステート
-    let coverImage = null;
-    let songTitle = "Awesome Track";
-    let artistName = "Spectrum Producer";
+    // テキストステート
+    let songTitle = "noname";
+    let artistName = "";
 
-    // 静的波形プロファイル（SoundCloud用）
+    // 静的波形プロファイル（SoundCloud仕様）
     let waveformData = [];
     const WAVEFORM_BAR_COUNT = 130;
 
-    // ビジュアライザ設定の現在値
+    // 固定ビジュアライザ設定 (SoundCloud風シングルスタイル)
     let config = {
-      style: 'soundcloud', // bars, radial, particles, synthwave, sine, soundcloud
-      theme: 'neon', // neon, aurora, sunset, cyberpunk
-      glow: 15,
       sensitivity: 1.2,
-      fftSize: 512,
-      showParticles: true,
-      mirror: true,
-      beatShake: true,
-      bgStyle: 'artBlur'
-    };
-
-    // パーティクル配列
-    let particles = [];
-    const PARTICLE_COUNT = 80;
-
-    // ビート揺らし用の内部パラメータ
-    let beatAmount = 0;
-    let currentThemeColors = ['#6366f1', '#3b82f6', '#06b6d4']; // 初期はneonトーン
-
-    // カラーパレット定義（落ち着いたトーン）
-    const COLOR_THEMES = {
-      neon: ['#6366f1', '#3b82f6', '#06b6d4'],
-      aurora: ['#10b981', '#06b6d4', '#3b82f6'],
-      sunset: ['#f59e0b', '#f97316', '#ef4444'],
-      cyberpunk: ['#06b6d4', '#8b5cf6', '#ec4899']
+      fftSize: 512
     };
 
     // ----------------------------------------------------
     // 初期セットアップ
     // ----------------------------------------------------
-    // アーティスト名のLocalStorage永続化対応
+    // アーティスト名のLocalStorage永続化
     const inputArtistName = document.getElementById('inputArtistName');
     const savedArtist = localStorage.getItem('audiovideo_saved_artist');
     if (savedArtist) {
@@ -489,23 +316,7 @@
       inputArtistName.value = artistName;
     }
 
-    // パーティクルの初期化
-    function initParticles() {
-      particles = [];
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        particles.push({
-          x: Math.random() * CANVAS_WIDTH,
-          y: Math.random() * CANVAS_HEIGHT,
-          size: Math.random() * 3 + 1,
-          speedX: (Math.random() - 0.5) * 1.5,
-          speedY: (Math.random() - 0.5) * 1.5 - 0.5,
-          alpha: Math.random() * 0.5 + 0.2
-        });
-      }
-    }
-    initParticles();
-
-    // SoundCloud用の仮のダミー波形
+    // SoundCloud風用の仮のダミー波形
     function generateDummyWaveform() {
       waveformData = [];
       for (let i = 0; i < WAVEFORM_BAR_COUNT; i++) {
@@ -531,26 +342,7 @@
     const volumeIcon = document.getElementById('volumeIcon');
     const trackTitle = document.getElementById('trackTitle');
     
-    // カスタマイズ系UI
-    const styleButtons = document.querySelectorAll('.style-btn');
-    const colorThemeButtons = document.querySelectorAll('.color-theme-btn');
-    const sliderGlow = document.getElementById('sliderGlow');
-    const valGlow = document.getElementById('valGlow');
-    const sliderSensitivity = document.getElementById('sliderSensitivity');
-    const valSensitivity = document.getElementById('valSensitivity');
-    const sliderFft = document.getElementById('sliderFft');
-    const valFft = document.getElementById('valFft');
-    const checkParticles = document.getElementById('checkParticles');
-    const checkMirror = document.getElementById('checkMirror');
-    const checkBeatShake = document.getElementById('checkBeatShake');
-    const bgStyleSelect = document.getElementById('bgStyleSelect');
-
     // 追加UI
-    const artFileInput = document.getElementById('artFileInput');
-    const artFileInfo = document.getElementById('artFileInfo');
-    const artPreview = document.getElementById('artPreview');
-    const artFileNameDisp = document.getElementById('artFileNameDisp');
-    const btnRemoveArt = document.getElementById('btnRemoveArt');
     const inputSongTitle = document.getElementById('inputSongTitle');
 
     // 録画系UI
@@ -564,20 +356,17 @@
     const recordBtnText = document.getElementById('recordBtnText');
     const downloadArea = document.getElementById('downloadArea');
     const downloadLink = document.getElementById('downloadLink');
-    const exportFormatSelect = document.getElementById('exportFormatSelect');
     const browserCompatibilityInfo = document.getElementById('browserCompatibilityInfo');
     const downloadBtnText = document.getElementById('downloadBtnText');
 
     // 互換性チェック表示
     function updateCompatibilityUI() {
       const mp4Supported = MediaRecorder.isTypeSupported('video/mp4') || MediaRecorder.isTypeSupported('video/mp4;codecs=h264');
-      const m4aSupported = MediaRecorder.isTypeSupported('audio/mp4') || MediaRecorder.isTypeSupported('audio/mp4;codecs=aac');
-      
-      let statusStr = "ブラウザ環境: ";
-      if (mp4Supported && m4aSupported) {
-        statusStr += "MP4/M4A ネイティブ対応";
+      let statusStr = "ブラウザ書き出し環境: ";
+      if (mp4Supported) {
+        statusStr += "MP4 ネイティブ対応";
       } else {
-        statusStr += "MP4/M4A非対応 (WebMへ自動変換)";
+        statusStr += "MP4非対応 (高品質WebMとして保存)";
       }
       browserCompatibilityInfo.textContent = statusStr;
     }
@@ -600,14 +389,11 @@
       const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
       const parts = nameWithoutExt.split('-');
       if (parts.length > 1) {
-        // ファイルから取得したアーティスト名を適用＆永続化
         inputArtistName.value = parts[0].trim();
         artistName = parts[0].trim();
         localStorage.setItem('audiovideo_saved_artist', artistName);
-
         inputSongTitle.value = parts.slice(1).join('-').trim();
       } else {
-        // アーティスト名は保存されたものをそのまま使い、曲名のみファイル名から設定
         inputSongTitle.value = nameWithoutExt.trim();
       }
       songTitle = inputSongTitle.value;
@@ -618,37 +404,6 @@
 
       // オーディオのロード
       loadAudioFile(file);
-    }
-
-    // アートワーク選択イベント
-    artFileInput.addEventListener('change', handleArtSelect);
-    btnRemoveArt.addEventListener('click', (e) => {
-      e.stopPropagation();
-      coverImage = null;
-      artFileInput.value = '';
-      artFileInfo.classList.add('hidden');
-      if (!isPlaying && audioBuffer) requestAnimationFrame(drawVisualizer);
-    });
-
-    function handleArtSelect(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-          coverImage = img;
-          artPreview.src = event.target.result;
-          artFileNameDisp.textContent = file.name;
-          artFileInfo.classList.remove('hidden');
-          if (!isPlaying) {
-            requestAnimationFrame(drawVisualizer);
-          }
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
     }
 
     // テキスト変更リスナー
@@ -893,80 +648,7 @@
     });
 
     // ----------------------------------------------------
-    // カスタマイズ・イベント処理
-    // ----------------------------------------------------
-    styleButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        styleButtons.forEach(b => {
-          b.classList.remove('border-indigo-500/20', 'bg-indigo-950/10', 'text-indigo-300');
-          b.classList.add('border-slate-800', 'bg-slate-900/40', 'text-slate-400');
-        });
-        btn.classList.add('border-indigo-500/20', 'bg-indigo-950/10', 'text-indigo-300');
-        
-        config.style = btn.dataset.style;
-        if (!isPlaying) requestAnimationFrame(drawVisualizer);
-      });
-    });
-
-    styleButtons.forEach(btn => {
-      if (btn.dataset.style === config.style) {
-        btn.click();
-      }
-    });
-
-    colorThemeButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        colorThemeButtons.forEach(b => b.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2', 'ring-offset-slate-950'));
-        btn.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2', 'ring-offset-slate-950');
-        
-        config.theme = btn.dataset.theme;
-        currentThemeColors = COLOR_THEMES[config.theme];
-        if (!isPlaying) requestAnimationFrame(drawVisualizer);
-      });
-    });
-
-    sliderGlow.addEventListener('input', () => {
-      config.glow = parseInt(sliderGlow.value);
-      valGlow.textContent = config.glow + 'px';
-      if (!isPlaying) requestAnimationFrame(drawVisualizer);
-    });
-
-    sliderSensitivity.addEventListener('input', () => {
-      config.sensitivity = parseFloat(sliderSensitivity.value);
-      valSensitivity.textContent = config.sensitivity.toFixed(1) + 'x';
-      if (!isPlaying) requestAnimationFrame(drawVisualizer);
-    });
-
-    sliderFft.addEventListener('input', () => {
-      const power = parseInt(sliderFft.value); 
-      const size = Math.pow(2, power);
-      config.fftSize = size;
-      
-      const labelMap = {
-        128: '超粗い (128)',
-        256: '粗い (256)',
-        512: '中 (512)',
-        1024: '細かい (1024)',
-        2048: '極細 (2048)'
-      };
-      valFft.textContent = labelMap[size] || size;
-
-      if (analyser) {
-        analyser.fftSize = size;
-      }
-    });
-
-    checkParticles.addEventListener('change', () => { config.showParticles = checkParticles.checked; if (!isPlaying) requestAnimationFrame(drawVisualizer); });
-    checkMirror.addEventListener('change', () => { config.mirror = checkMirror.checked; if (!isPlaying) requestAnimationFrame(drawVisualizer); });
-    checkBeatShake.addEventListener('change', () => { config.beatShake = checkBeatShake.checked; if (!isPlaying) requestAnimationFrame(drawVisualizer); });
-
-    bgStyleSelect.addEventListener('change', () => {
-      config.bgStyle = bgStyleSelect.value;
-      if (!isPlaying) requestAnimationFrame(drawVisualizer);
-    });
-
-    // ----------------------------------------------------
-    // Canvas ビジュアライザ描画コア
+    // Canvas ビジュアライザ描画コア (SoundCloud風・1種類限定)
     // ----------------------------------------------------
     function drawVisualizer() {
       if (!isPlaying && !audioBuffer) return;
@@ -982,524 +664,40 @@
         }
       }
 
-      let bassSum = 0;
-      const bassRange = Math.min(8, bufferLength);
-      for (let i = 1; i <= bassRange; i++) {
-        bassSum += dataArray[i];
-      }
-      const averageBass = bassSum / bassRange;
-      const normalizedBass = averageBass / 255; 
-      
-      if (config.beatShake) {
-        beatAmount = normalizedBass * 18; 
-      } else {
-        beatAmount = 0;
-      }
+      // シックなダークトーン背景の描画
+      drawBackground();
 
-      drawBackground(normalizedBass);
-
-      if (config.showParticles) {
-        drawParticles(normalizedBass);
-      }
-
+      // グロー効果の適用
       ctx.save();
-      if (config.glow > 0) {
-        ctx.shadowBlur = config.glow;
-        ctx.shadowColor = config.style === 'soundcloud' ? '#4f46e5' : currentThemeColors[1];
-      }
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = 'rgba(79, 70, 229, 0.4)'; // インディゴグロー
 
-      switch (config.style) {
-        case 'bars':
-          drawNeonBars(dataArray, bufferLength);
-          break;
-        case 'radial':
-          drawRadialSpectrum(dataArray, bufferLength, normalizedBass);
-          break;
-        case 'particles':
-          drawCosmicParticlesStyle(dataArray, bufferLength, normalizedBass);
-          break;
-        case 'synthwave':
-          drawRetroSynthwave(dataArray, bufferLength, normalizedBass);
-          break;
-        case 'sine':
-          drawSineLiquidWaves(dataArray, bufferLength, normalizedBass);
-          break;
-        case 'soundcloud':
-          drawSoundCloudMode(dataArray, bufferLength, normalizedBass);
-          break;
-      }
+      // SoundCloud風単一スペクトラム描画処理
+      drawSoundCloudMode(dataArray, bufferLength);
 
       ctx.restore();
-
-      // 透かし・ロゴの描画 (Studioを削除)
-      if (config.style !== 'soundcloud') {
-        ctx.save();
-        ctx.font = 'bold 20px "Share Tech Mono", monospace';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.textAlign = 'right';
-        ctx.fillText('AudioVideo', CANVAS_WIDTH - 60, CANVAS_HEIGHT - 60);
-        
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(CANVAS_WIDTH - 180, CANVAS_HEIGHT - 50);
-        ctx.lineTo(CANVAS_WIDTH - 60, CANVAS_HEIGHT - 50);
-        ctx.stroke();
-        ctx.restore();
-      }
 
       if (isPlaying || isRecording) {
         requestAnimationFrame(drawVisualizer);
       }
     }
 
-    function drawDefaultArtwork(ctx, x, y, size) {
+    // 落ち着いた高品位ダークグラデーション背景
+    function drawBackground() {
       ctx.save();
-      let discGrad = ctx.createRadialGradient(x, y, 10, x, y, size / 2);
-      discGrad.addColorStop(0, '#111827');
-      discGrad.addColorStop(0.5, '#090d16');
-      discGrad.addColorStop(0.9, '#03050a');
-      discGrad.addColorStop(1, '#4f46e5');
-
-      ctx.fillStyle = discGrad;
-      ctx.beginPath();
-      ctx.arc(x, y, size / 2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-      ctx.lineWidth = 2;
-      for (let r = 30; r < size / 2; r += 20) {
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      ctx.fillStyle = '#4f46e5';
-      ctx.beginPath();
-      ctx.arc(x, y, 40, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px "Share Tech Mono", sans-serif';
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'center';
-      ctx.fillText('AudioVideo', x, y);
-
+      let gradient = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      gradient.addColorStop(0, '#040712');
+      gradient.addColorStop(0.5, '#020307');
+      gradient.addColorStop(1, '#080a18');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       ctx.restore();
     }
 
-    function drawBackground(bass) {
-      ctx.save();
-
-      if (config.beatShake && bass > 0.5) {
-        const shakeX = (Math.random() - 0.5) * beatAmount * 0.5;
-        const shakeY = (Math.random() - 0.5) * beatAmount * 0.5;
-        ctx.translate(shakeX, shakeY);
-      }
-
-      let gradient;
-      
-      if (config.bgStyle === 'artBlur') {
-        if (coverImage) {
-          ctx.filter = 'blur(50px) brightness(0.2) saturate(0.9)';
-          ctx.drawImage(coverImage, -100, -100, CANVAS_WIDTH + 200, CANVAS_HEIGHT + 200);
-        } else {
-          gradient = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-          gradient.addColorStop(0, '#040711');
-          gradient.addColorStop(0.5, '#020308');
-          gradient.addColorStop(1, '#0b0c16');
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        }
-      } else {
-        switch (config.bgStyle) {
-          case 'deepSpace':
-            ctx.fillStyle = '#020408';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            break;
-            
-          case 'cosmicBlue':
-            gradient = ctx.createRadialGradient(
-              CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 50,
-              CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_WIDTH * 0.8
-            );
-            gradient.addColorStop(0, '#091122');
-            gradient.addColorStop(0.5, '#040711');
-            gradient.addColorStop(1, '#010205');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            break;
-
-          case 'sunsetVibe':
-            gradient = ctx.createRadialGradient(
-              CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 100,
-              CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_WIDTH * 0.7
-            );
-            gradient.addColorStop(0, '#1a0d16');
-            gradient.addColorStop(0.4, '#0a0408');
-            gradient.addColorStop(1, '#020103');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            break;
-
-          case 'cyberGrid':
-            ctx.fillStyle = '#03050a';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            
-            ctx.strokeStyle = 'rgba(99, 102, 241, 0.03)';
-            ctx.lineWidth = 1;
-            const gridSize = 60;
-            
-            ctx.beginPath();
-            for (let x = 0; x < CANVAS_WIDTH; x += gridSize) {
-              ctx.moveTo(x, 0);
-              ctx.lineTo(x, CANVAS_HEIGHT);
-            }
-            for (let y = 0; y < CANVAS_HEIGHT; y += gridSize) {
-              ctx.moveTo(0, y);
-              ctx.lineTo(CANVAS_WIDTH, y);
-            }
-            ctx.stroke();
-            break;
-
-          case 'neonFog':
-            ctx.fillStyle = '#020306';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            
-            const time = Date.now() * 0.0003;
-            const fx1 = CANVAS_WIDTH / 2 + Math.cos(time) * 300;
-            const fy1 = CANVAS_HEIGHT / 2 + Math.sin(time * 1.5) * 200;
-            const fx2 = CANVAS_WIDTH / 2 + Math.sin(time * 0.8) * 400;
-            const fy2 = CANVAS_HEIGHT / 2 + Math.cos(time * 1.2) * 300;
-
-            gradient = ctx.createRadialGradient(fx1, fy1, 50, fx1, fy1, 600);
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.05)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-            gradient = ctx.createRadialGradient(fx2, fy2, 100, fx2, fy2, 700);
-            gradient.addColorStop(0, 'rgba(14, 116, 144, 0.04)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            break;
-        }
-      }
-
-      ctx.restore();
-    }
-
-    function drawParticles(bass) {
-      ctx.save();
-      
-      const speedMultiplier = 1 + bass * 2.5; 
-
-      for (let i = 0; i < particles.length; i++) {
-        let p = particles[i];
-        
-        p.x += p.speedX * speedMultiplier;
-        p.y += p.speedY * speedMultiplier;
-        
-        if (p.x < 0) p.x = CANVAS_WIDTH;
-        if (p.x > CANVAS_WIDTH) p.x = 0;
-        if (p.y < 0) p.y = CANVAS_HEIGHT;
-        if (p.y > CANVAS_HEIGHT) p.y = 0;
-
-        ctx.fillStyle = config.style === 'soundcloud' ? '#4f46e5' : currentThemeColors[0];
-        ctx.globalAlpha = p.alpha * (0.3 + bass * 0.5);
-        ctx.beginPath();
-        const currentSize = p.size * (1 + bass * 0.6);
-        ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    function drawNeonBars(dataArray, bufferLength) {
-      const activeLength = Math.floor(bufferLength * 0.85);
-      const barCount = config.mirror ? Math.floor(activeLength / 2) : activeLength;
-      
-      const padding = 6;
-      const spaceAvailable = CANVAS_WIDTH - (padding * (barCount + 1));
-      const barWidth = spaceAvailable / barCount;
-      
-      ctx.save();
-      ctx.translate(0, CANVAS_HEIGHT - 100);
-
-      const colorGrad = ctx.createLinearGradient(0, 0, 0, -600);
-      colorGrad.addColorStop(0, currentThemeColors[0]);
-      colorGrad.addColorStop(0.5, currentThemeColors[1]);
-      colorGrad.addColorStop(1, currentThemeColors[2]);
-
-      for (let i = 0; i < barCount; i++) {
-        let dataIdx = i;
-        if (config.mirror) {
-          dataIdx = Math.floor(barCount - i);
-        }
-        
-        let value = (dataArray[dataIdx] || 0) * config.sensitivity;
-        let barHeight = Math.max(8, (value / 255) * 650);
-
-        let x;
-        if (config.mirror) {
-          const halfW = CANVAS_WIDTH / 2;
-          const xLeft = halfW - (i * (barWidth + padding)) - barWidth / 2;
-          ctx.fillStyle = colorGrad;
-          drawRoundedRect(ctx, xLeft, -barHeight, barWidth, barHeight, barWidth / 2);
-          
-          const xRight = halfW + (i * (barWidth + padding)) - barWidth / 2;
-          ctx.fillStyle = colorGrad;
-          drawRoundedRect(ctx, xRight, -barHeight, barWidth, barHeight, barWidth / 2);
-        } else {
-          x = padding + i * (barWidth + padding);
-          ctx.fillStyle = colorGrad;
-          drawRoundedRect(ctx, x, -barHeight, barWidth, barHeight, barWidth / 2);
-        }
-      }
-      ctx.restore();
-    }
-
-    function drawRadialSpectrum(dataArray, bufferLength, bass) {
-      const centerX = CANVAS_WIDTH / 2;
-      const centerY = CANVAS_HEIGHT / 2;
-      const baseRadius = 230 + bass * 35;
-      
-      const activeLength = Math.floor(bufferLength * 0.75);
-      const barCount = config.mirror ? activeLength : activeLength * 2;
-      
-      ctx.save();
-      ctx.translate(centerX, centerY);
-
-      if (coverImage) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(0, 0, baseRadius - 15, 0, Math.PI * 2);
-        ctx.clip();
-        const rotTime = isPlaying ? Date.now() * 0.0003 : 0;
-        ctx.rotate(rotTime);
-        ctx.drawImage(coverImage, -(baseRadius - 15), -(baseRadius - 15), (baseRadius - 15) * 2, (baseRadius - 15) * 2);
-        ctx.restore();
-      } else {
-        drawDefaultArtwork(ctx, 0, 0, (baseRadius - 15) * 2);
-      }
-      
-      ctx.strokeStyle = currentThemeColors[2];
-      ctx.lineWidth = 4 + bass * 5;
-      ctx.beginPath();
-      ctx.arc(0, 0, baseRadius - 10, 0, Math.PI * 2);
-      ctx.stroke();
-
-      for (let i = 0; i < barCount; i++) {
-        let dataIdx = i % activeLength;
-        if (config.mirror && i >= activeLength) {
-          dataIdx = activeLength - (i - activeLength) - 1;
-        }
-
-        const value = (dataArray[dataIdx] || 0) * config.sensitivity;
-        const barHeight = Math.max(5, (value / 255) * 340);
-        
-        const angle = (i / barCount) * Math.PI * 2;
-        
-        ctx.rotate(angle);
-
-        const barGrad = ctx.createLinearGradient(0, baseRadius, 0, baseRadius + barHeight);
-        barGrad.addColorStop(0, currentThemeColors[0]);
-        barGrad.addColorStop(0.5, currentThemeColors[1]);
-        barGrad.addColorStop(1, currentThemeColors[2]);
-
-        ctx.fillStyle = barGrad;
-        
-        const currentBarWidth = Math.max(3.5, (Math.PI * 2 * baseRadius / barCount) * 0.72);
-        drawRoundedRect(ctx, -currentBarWidth / 2, baseRadius, currentBarWidth, barHeight, currentBarWidth / 2);
-        
-        ctx.rotate(-angle);
-      }
-      
-      ctx.restore();
-    }
-
-    function drawCosmicParticlesStyle(dataArray, bufferLength, bass) {
-      const centerX = CANVAS_WIDTH / 2;
-      const centerY = CANVAS_HEIGHT / 2;
-      
-      ctx.save();
-      ctx.strokeStyle = currentThemeColors[1];
-      ctx.lineWidth = 4 + bass * 4;
-      ctx.beginPath();
-      
-      const activeLength = Math.floor(bufferLength * 0.6);
-      const angleStep = (Math.PI * 2) / (activeLength * 2);
-      
-      for (let i = 0; i < activeLength * 2 + 1; i++) {
-        const dataIdx = i % activeLength;
-        const rawVal = dataArray[dataIdx] || 0;
-        const val = (rawVal * config.sensitivity) / 255;
-        
-        const currentAngle = i * angleStep;
-        const r = 300 + Math.sin(currentAngle * 10 + Date.now() * 0.003) * 30 + val * 220;
-        
-        const x = centerX + Math.cos(currentAngle) * r;
-        const y = centerY + Math.sin(currentAngle) * r;
-        
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      }
-      ctx.closePath();
-      ctx.stroke();
-
-      if (coverImage) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 80 + bass * 30, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(coverImage, centerX - (80 + bass * 30), centerY - (80 + bass * 30), (80 + bass * 30) * 2, (80 + bass * 30) * 2);
-        ctx.restore();
-      } else {
-        ctx.fillStyle = currentThemeColors[0];
-        ctx.shadowBlur = 30;
-        ctx.shadowColor = currentThemeColors[0];
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 80 + bass * 30, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
-    }
-
-    function drawRetroSynthwave(dataArray, bufferLength, bass) {
-      ctx.save();
-      
-      const horizonY = CANVAS_HEIGHT * 0.55;
-      
-      const sunRadius = 240 + bass * 25;
-      const sunGradient = ctx.createLinearGradient(0, horizonY - sunRadius, 0, horizonY);
-      sunGradient.addColorStop(0, '#312e81'); 
-      sunGradient.addColorStop(0.5, '#4f46e5');
-      sunGradient.addColorStop(1, '#06b6d4');
-      
-      ctx.fillStyle = sunGradient;
-      ctx.beginPath();
-      ctx.arc(CANVAS_WIDTH / 2, horizonY, sunRadius, Math.PI, 0, false);
-      ctx.fill();
-
-      ctx.fillStyle = '#020408'; 
-      for (let y = horizonY - sunRadius; y < horizonY; y += 22) {
-        const thickness = Math.max(2, Math.min(14, (y - (horizonY - sunRadius)) / 18));
-        ctx.fillRect(CANVAS_WIDTH / 2 - sunRadius - 20, y, sunRadius * 2 + 40, thickness);
-      }
-
-      const barCount = 40;
-      const startX = CANVAS_WIDTH * 0.15;
-      const endX = CANVAS_WIDTH * 0.85;
-      const totalWidth = endX - startX;
-      const barWidth = (totalWidth / barCount) * 0.65;
-      const barSpacing = (totalWidth / barCount) * 0.35;
-
-      for (let i = 0; i < barCount; i++) {
-        const dataIdx = Math.floor(Math.abs(barCount / 2 - i) * (bufferLength * 0.4 / (barCount / 2)));
-        const value = (dataArray[dataIdx] || 0) * config.sensitivity;
-        const barHeight = (value / 255) * 380;
-
-        const x = startX + i * (barWidth + barSpacing);
-        
-        const barGrad = ctx.createLinearGradient(x, horizonY, x, horizonY - barHeight);
-        barGrad.addColorStop(0, 'rgba(79, 70, 229, 0.9)');
-        barGrad.addColorStop(1, '#06b6d4');
-        
-        ctx.fillStyle = barGrad;
-        ctx.fillRect(x, horizonY - barHeight, barWidth, barHeight);
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x - 1, horizonY - barHeight - 4, barWidth + 2, 4);
-      }
-
-      ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
-      ctx.lineWidth = 2;
-      
-      let currentY = horizonY;
-      let gap = 12;
-      for (let i = 0; i < 20; i++) {
-        ctx.beginPath();
-        ctx.moveTo(0, currentY);
-        ctx.lineTo(CANVAS_WIDTH, currentY);
-        ctx.stroke();
-        gap *= 1.25; 
-        currentY += gap;
-        if (currentY > CANVAS_HEIGHT) break;
-      }
-
-      const vanishX = CANVAS_WIDTH / 2;
-      const vanishY = horizonY;
-      for (let x = -CANVAS_WIDTH * 0.5; x <= CANVAS_WIDTH * 1.5; x += 120) {
-        ctx.beginPath();
-        ctx.moveTo(vanishX, vanishY);
-        ctx.lineTo(x, CANVAS_HEIGHT);
-        ctx.stroke();
-      }
-
-      ctx.restore();
-    }
-
-    function drawSineLiquidWaves(dataArray, bufferLength, bass) {
-      ctx.save();
-      ctx.translate(0, CANVAS_HEIGHT / 2);
-
-      const activeLength = Math.floor(bufferLength * 0.5);
-      const points = [];
-      
-      for (let i = 0; i <= activeLength; i++) {
-        const val = (dataArray[i] || 0) * config.sensitivity;
-        const amplitude = (val / 255) * 280;
-        
-        const x = (i / activeLength) * CANVAS_WIDTH;
-        const timeFactor = Date.now() * 0.003;
-        const y = Math.sin(i * 0.25 + timeFactor) * (amplitude + 20);
-        points.push({ x, y });
-      }
-
-      const waveThemes = [
-        { color: currentThemeColors[0], alpha: 0.25, offset: 0, phase: 1.0 },
-        { color: currentThemeColors[1], alpha: 0.35, offset: Math.PI / 3, phase: 1.2 },
-        { color: currentThemeColors[2], alpha: 0.15, offset: Math.PI / 1.5, phase: 0.7 }
-      ];
-
-      waveThemes.forEach((wave, idx) => {
-        ctx.fillStyle = wave.color;
-        ctx.globalAlpha = wave.alpha;
-        
-        ctx.beginPath();
-        ctx.moveTo(0, CANVAS_HEIGHT / 2);
-
-        for (let i = 0; i < points.length; i++) {
-          const pt = points[i];
-          const dynamicY = Math.sin(i * 0.15 + Date.now() * 0.002 * wave.phase + wave.offset) * (Math.abs(pt.y) + 15);
-          
-          if (i === 0) {
-            ctx.lineTo(0, dynamicY);
-          } else {
-            const prevPt = points[i - 1];
-            const prevDynamicY = Math.sin((i - 1) * 0.15 + Date.now() * 0.002 * wave.phase + wave.offset) * (Math.abs(prevPt.y) + 15);
-            const xc = (prevPt.x + pt.x) / 2;
-            const yc = (prevDynamicY + dynamicY) / 2;
-            ctx.quadraticCurveTo(prevPt.x, prevDynamicY, xc, yc);
-          }
-        }
-        
-        ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2);
-        ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT);
-        ctx.lineTo(0, CANVAS_HEIGHT);
-        ctx.closePath();
-        ctx.fill();
-      });
-
-      ctx.restore();
-    }
-
-    function drawSoundCloudMode(dataArray, bufferLength, bass) {
+    // ----------------------------------------------------
+    // SoundCloud 風描画ロジック (上下のリアルタイムな揺れ・ピクピク跳ねる演出を完全に削除)
+    // ----------------------------------------------------
+    function drawSoundCloudMode(dataArray, bufferLength) {
       ctx.save();
       
       const currentSeekTime = isPlaying 
@@ -1508,44 +706,34 @@
       
       const progressRatio = duration > 0 ? Math.min(1.0, currentSeekTime / duration) : 0;
       
-      const artX = 120;
-      const artY = 160;
-      const artSize = 420;
+      const textX = 140; // 左側マージンを揃えて配置
+      const textY = 240; 
       
+      // 1. 曲情報テキスト (アーティスト名 & トラックタイトルを左寄せでレイアウト)
       ctx.save();
-      ctx.shadowBlur = 40;
-      ctx.shadowColor = 'rgba(79, 70, 229, 0.4)'; 
       
-      if (coverImage) {
-        ctx.beginPath();
-        drawRoundRectPath(ctx, artX, artY, artSize, artSize, 24);
-        ctx.clip();
-        ctx.drawImage(coverImage, artX, artY, artSize, artSize);
-      } else {
-        drawDefaultArtwork(ctx, artX + artSize/2, artY + artSize/2, artSize);
-      }
-      ctx.restore();
-
-      ctx.save();
-      const textX = artX + artSize + 60;
+      // アーティスト名
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+      ctx.font = '500 36px "Inter", "Noto Sans JP", sans-serif';
+      ctx.fillText(artistName, textX, textY);
       
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.font = '500 28px "Inter", "Noto Sans JP", sans-serif';
-      ctx.fillText(artistName, textX, artY + 90);
-      
+      // トラック名 (ボールドで引き立つ高品位表示)
       ctx.fillStyle = '#ffffff';
-      ctx.font = '900 68px "Inter", "Noto Sans JP", sans-serif';
+      ctx.font = '900 84px "Inter", "Noto Sans JP", sans-serif';
       let displayTitle = songTitle;
-      if (ctx.measureText(displayTitle).width > (CANVAS_WIDTH - textX - 100)) {
-        ctx.font = '900 52px "Inter", "Noto Sans JP", sans-serif';
+      // 長すぎるテキストは自動スケールダウン
+      if (ctx.measureText(displayTitle).width > (CANVAS_WIDTH - 280)) {
+        ctx.font = '900 64px "Inter", "Noto Sans JP", sans-serif';
       }
-      ctx.fillText(displayTitle, textX, artY + 180);
+      ctx.fillText(displayTitle, textX, textY + 110);
 
       ctx.restore();
 
-      const waveX = 120;
+      // 2. 静的な全体のオーディオ波形シーク表示 (下部)
+      // リアルタイムの音量の跳ねを完全に排除し、滑らかで整った波形分布を静止表示します。
+      const waveX = 140;
       const waveY = 820; 
-      const waveWidth = CANVAS_WIDTH - 240;
+      const waveWidth = CANVAS_WIDTH - 280;
       const maxWaveHeight = 240;
       const barSpacing = 4;
       const totalBars = waveformData.length;
@@ -1555,24 +743,24 @@
         const currentBarRatio = i / totalBars;
         const isPlayed = currentBarRatio <= progressRatio;
         
+        // シックなインディゴブルー ＆ 未再生のクリアホワイト
         if (isPlayed) {
           ctx.fillStyle = '#4f46e5';
         } else {
           ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         }
 
-        const dataIdx = Math.floor((i / totalBars) * (bufferLength * 0.4));
-        const realTimeVal = dataArray[dataIdx] || 0;
-        
+        // 音声デコードで得られた「100%静的な波形形状プロファイル」のみを使用（リアルタイムの跳ねは加算しない）
         const staticVal = waveformData[i] || 0;
-        const animatedFactor = isPlaying ? (realTimeVal / 255) * 0.35 * config.sensitivity : 0.05;
-        const currentBarHeight = (staticVal * 0.7 + animatedFactor) * maxWaveHeight;
+        const currentBarHeight = staticVal * 0.75 * maxWaveHeight;
 
         const x = waveX + i * (singleBarWidth + barSpacing);
         
+        // 上下対称波形構造 (完全に静止した滑らかな波形)
         const mainHeight = Math.max(6, currentBarHeight);
         ctx.fillRect(x, waveY, singleBarWidth, -mainHeight);
         
+        // 下部分 (鏡面反射)
         if (isPlayed) {
           ctx.fillStyle = '#6366f1'; 
         } else {
@@ -1581,6 +769,7 @@
         ctx.fillRect(x, waveY + 4, singleBarWidth, mainHeight * 0.32);
       }
 
+      // 再生位置の縦シークバー
       const currentCursorX = waveX + (waveWidth * progressRatio);
       
       ctx.strokeStyle = 'rgba(99, 102, 241, 0.6)';
@@ -1590,6 +779,7 @@
       ctx.lineTo(currentCursorX, waveY + (maxWaveHeight * 0.4) + 20);
       ctx.stroke();
 
+      // 再生時間とトータル時間のミニマム表示
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 22px "Share Tech Mono", monospace';
       ctx.textAlign = 'left';
@@ -1602,57 +792,28 @@
       ctx.restore();
     }
 
-    function drawRoundRectPath(ctx, x, y, width, height, radius) {
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-    }
-
     // ----------------------------------------------------
-    // インテリジェント・ビデオ＆オーディオ録画 / エクスポート機能
+    // ビデオ録画 / エクスポート機能 (シングルMP4出力)
     // ----------------------------------------------------
-    // キャプチャするMIMEタイプの選定
-    function getBestSupportedMimeType(format) {
-      if (format === 'mp4') {
-        const mp4Types = [
-          'video/mp4;codecs=h264,aac',
-          'video/mp4;codecs=h264',
-          'video/mp4',
-          'video/webm;codecs=vp9,opus',
-          'video/webm;codecs=vp8,opus',
-          'video/webm'
-        ];
-        for (const type of mp4Types) {
-          if (MediaRecorder.isTypeSupported(type)) return type;
-        }
-      } else if (format === 'm4a') {
-        const m4aTypes = [
-          'audio/mp4;codecs=aac',
-          'audio/mp4',
-          'audio/webm;codecs=opus',
-          'audio/webm',
-          'audio/ogg',
-          'audio/aac'
-        ];
-        for (const type of m4aTypes) {
-          if (MediaRecorder.isTypeSupported(type)) return type;
-        }
+    function getBestSupportedMimeType() {
+      const mp4Types = [
+        'video/mp4;codecs=h264,aac',
+        'video/mp4;codecs=h264',
+        'video/mp4',
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm'
+      ];
+      for (const type of mp4Types) {
+        if (MediaRecorder.isTypeSupported(type)) return type;
       }
-      return '';
+      return 'video/webm';
     }
 
     async function startRecording() {
       if (!audioBuffer) return;
       initAudio();
 
-      const format = exportFormatSelect.value; // 'mp4' or 'm4a'
       recordedChunks = [];
       downloadArea.classList.add('hidden');
       
@@ -1673,25 +834,13 @@
       audioDestination = audioCtx.createMediaStreamDestination();
       analyser.connect(audioDestination);
       
-      // 音声トラックをストリームに格納
+      // 音声と映像トラックを結合
       audioDestination.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+      const canvasStream = canvas.captureStream(60); 
+      canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
 
-      // MP4(動画)選択時のみ映像トラックを追加
-      if (format === 'mp4') {
-        const canvasStream = canvas.captureStream(60); // 高精度60fpsキャプチャ
-        canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
-      }
-
-      const targetMimeType = getBestSupportedMimeType(format);
-      
-      // 保存拡張子の自動決定
-      let fileExt = 'webm';
-      if (format === 'mp4') {
-        fileExt = targetMimeType.includes('video/mp4') ? 'mp4' : 'webm';
-      } else if (format === 'm4a') {
-        fileExt = targetMimeType.includes('audio/mp4') ? 'm4a' : 'webm';
-      }
-
+      const targetMimeType = getBestSupportedMimeType();
+      const fileExt = targetMimeType.includes('video/mp4') ? 'mp4' : 'webm';
       const options = targetMimeType ? { mimeType: targetMimeType } : {};
 
       try {
@@ -1709,19 +858,13 @@
       };
 
       mediaRecorder.onstop = function() {
-        const mimeTypeHeader = targetMimeType || (format === 'mp4' ? 'video/webm' : 'audio/webm');
+        const mimeTypeHeader = targetMimeType || 'video/webm';
         const blob = new Blob(recordedChunks, { type: mimeTypeHeader });
         const outputURL = URL.createObjectURL(blob);
         
         downloadLink.href = outputURL;
         downloadLink.download = `${songTitle.replace(/\s+/g, '_')}_AudioVideo.${fileExt}`;
-        
-        // 保存ボタンテキストの調整
-        if (format === 'mp4') {
-          downloadBtnText.textContent = `動画を保存 (.${fileExt})`;
-        } else {
-          downloadBtnText.textContent = `音声を保存 (.${fileExt})`;
-        }
+        downloadBtnText.textContent = `動画を保存 (.${fileExt})`;
 
         downloadArea.classList.remove('hidden');
         stopRecordingCleanup();
@@ -1745,7 +888,7 @@
       btnStopRecord.classList.add('hidden');
       recordingBadge.classList.add('hidden');
       recPulse.style.display = 'none';
-      recordBtnText.textContent = "録画・書き出しを開始する";
+      recordBtnText.textContent = "動画の書き出しを開始する";
       recordingProgress.classList.add('hidden');
     }
 
@@ -1801,9 +944,6 @@
         if (file.type.startsWith('audio/')) {
           fileInput.files = e.dataTransfer.files;
           handleFileSelect({ target: fileInput });
-        } else if (file.type.startsWith('image/')) {
-          artFileInput.files = e.dataTransfer.files;
-          handleArtSelect({ target: artFileInput });
         }
       }
     });
