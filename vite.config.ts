@@ -1,5 +1,6 @@
 import { defineConfig, lazyPlugins } from 'vite-plus'
 import vue from '@vitejs/plugin-vue'
+import ui from '@nuxt/ui/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,5 +13,5 @@ export default defineConfig({
     rules: { 'vite-plus/prefer-vite-plus-imports': 'error' },
     options: { typeAware: true, typeCheck: true },
   },
-  plugins: lazyPlugins(() => [vue()]),
+  plugins: lazyPlugins(() => [vue(), ui()]),
 })

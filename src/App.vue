@@ -1,3 +1,5 @@
 <template>
-  <RouterView />
+  <UMain>
+    <RouterView />
+  </UMain>
 </template>
