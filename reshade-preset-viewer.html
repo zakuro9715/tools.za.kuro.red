@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReShade Preset Viewer & Editor</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* ReShadeカラーのカスタムスタイル */
+        :root {
+            --rs-bg-dark: #141618;
+            --rs-bg-panel: #202428;
+            --rs-bg-input: #181b1d;
+            --rs-bg-hover: #2d3339;
+            --rs-border: #3b4248;
+            --rs-text: #c5cbd3;
+            --rs-text-mute: #828a93;
+            --rs-active: #54a4ff;
+            --rs-active-hover: #7dbbff;
+            --rs-header-bg: #2d3238;
+        }
+
+        body {
+            background-color: #0d0e10;
+            color: var(--rs-text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .rs-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .rs-scrollbar::-webkit-scrollbar-track {
+            background: var(--rs-bg-dark);
+        }
+        .rs-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--rs-border);
+            border-radius: 2px;
+        }
+        .rs-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--rs-text-mute);
+        }
+
+        /* スライダーのReShade風カスタム */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--rs-bg-input);
+            height: 18px;
+            border: 1px solid var(--rs-border);
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 8px;
+            height: 16px;
+            background: var(--rs-active);
+            cursor: pointer;
+            border-radius: 1px;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 8px;
+            height: 16px;
+            background: var(--rs-active);
+            cursor: pointer;
+            border-radius: 1px;
+            border: none;
+        }
+
+        /* カスタムチェックボックス */
+        .rs-checkbox {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 1px solid var(--rs-border);
+            background-color: var(--rs-bg-input);
+            display: inline-grid;
+            place-content: center;
+            cursor: pointer;
+        }
+        .rs-checkbox:checked {
+            background-color: var(--rs-active);
+            border-color: var(--rs-active-hover);
+        }
+        .rs-checkbox:checked::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            clip-path: polygon(14% 44%, 0 58%, 38% 95%, 100% 16%, 86% 2%, 38% 66%);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-xs select-none">
+
+    <!-- メインナビゲーション / ヘッダー -->
+    <header class="bg-[#202428] border-b border-[#3b4248] px-3 py-1.5 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center space-x-3">
+            <span class="text-[#54a4ff] font-bold tracking-wider text-sm flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-4 h-4"></i> ReShade 6.1.1
+            </span>
+            <span class="text-[#828a93]">|</span>
+            <span class="text-gray-300 flex items-center gap-1">
+                <i data-lucide="file-code" class="w-3.5 h-3.5 text-yellow-500"></i>
+                <span id="current-filename" class="font-medium">demo_preset.ini</span>
+            </span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <!-- ファイル読込・書き出しアクション -->
+            <label class="bg-[#181b1d] border border-[#3b4248] hover:bg-[#2d3339] px-2 py-1 cursor-pointer transition flex items-center gap-1 text-gray-300">
+                <i data-lucide="file-up" class="w-3.5 h-3.5 text-[#54a4ff]"></i>
+                INIファイルをインポート
+                <input type="file" id="ini-file-input" accept=".ini" class="hidden">
+            </label>
+            <button onclick="exportINI()" class="bg-[#181b1d] border border-[#3b4248] hover:bg-[#2d3339] px-2 py-1 transition flex items-center gap-1 text-gray-300">
+                <i data-lucide="save" class="w-3.5 h-3.5 text-green-500"></i>
+                INIをエクスポート
+            </button>
+            <button onclick="loadDemoPreset()" class="bg-[#181b1d] border border-[#3b4248] hover:bg-[#2d3339] px-2 py-1 transition flex items-center gap-1 text-gray-300" title="デモの初期値に戻す">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-orange-400"></i>
+                デモ読込
+            </button>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ領域 -->
+    <div class="flex-1 flex overflow-hidden min-h-0">
+        
+        <!-- 左ペイン: ReShade UI パネル -->
+        <main class="w-full lg:w-3/5 bg-[#202428] border-r border-[#3b4248] flex flex-col overflow-hidden">
+            
+            <!-- プリセットセレクター & 検索/フィルターバー -->
+            <div class="p-3 bg-[#1c1f22] border-b border-[#3b4248] space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-400">Preset:</span>
+                    <div class="flex-1 max-w-xs mx-2">
+                        <select id="preset-selector" class="w-full bg-[#181b1d] border border-[#3b4248] text-white px-2 py-1 rounded focus:outline-none" onchange="handlePresetSelect(this)">
+                            <option value="custom">インポート中または編集中のプリセット</option>
+                            <option value="cinematic">Cinematic Fantasy Preset (デモ)</option>
+                            <option value="anime">Vibrant Anime Style Preset (デモ)</option>
+                            <option value="performance">Lite Performance Preset (デモ)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-1 text-[#828a93]">
+                        <button onclick="toggleAllEffects(true)" class="hover:text-white p-1" title="すべて有効"><i data-lucide="check-square" class="w-4 h-4"></i></button>
+                        <button onclick="toggleAllEffects(false)" class="hover:text-white p-1" title="すべて無効"><i data-lucide="square" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+
+                <!-- フィルターコントロール -->
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#828a93]">
+                            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                        </span>
+                        <input type="text" id="effect-filter" placeholder="Filter active / Filter effects..." 
+                               class="w-full bg-[#181b1d] border border-[#3b4248] pl-8 pr-2 py-1 text-white focus:outline-none"
+                               oninput="renderEffectsList()">
+                    </div>
+                    <div class="flex items-center space-x-2 border border-[#3b4248] px-2 bg-[#181b1d]">
+                        <input type="checkbox" id="active-to-top" class="rs-checkbox" onchange="renderEffectsList()">
+                        <label for="active-to-top" class="cursor-pointer text-gray-400">Active to top</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- エフェクトリスト (チェックリスト & 実行順) -->
+            <div class="flex-1 overflow-y-auto rs-scrollbar p-1.5" id="effects-list-container">
+                <!-- JavaScriptでエフェクトリストを挿入 -->
+            </div>
+
+            <!-- パフォーマンスモード等のトグル (フッター領域) -->
+            <div class="p-2.5 bg-[#181b1d] border-t border-[#3b4248] flex justify-between items-center text-[#828a93]">
+                <div class="flex items-center space-x-3">
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                        <input type="checkbox" id="performance-mode" class="rs-checkbox" onchange="togglePerformanceMode(this)">
+                        <span class="text-gray-300">Performance Mode</span>
+                    </label>
+                    <span class="text-xs text-amber-500 hidden" id="performance-warning">
+                        <i data-lucide="alert-triangle" class="inline w-3 h-3 -mt-0.5"></i> 編集制限中
+                    </span>
+                </div>
+                <div>
+                    <span id="active-count">0</span> / <span id="total-count">0</span> effects active
+                </div>
+            </div>
+
+            <!-- 選択されたエフェクトのパラメータ設定セクション -->
+            <div class="h-1/2 bg-[#1c1f22] border-t border-[#3b4248] flex flex-col overflow-hidden">
+                <div class="p-2 bg-[#2d3238] border-b border-[#3b4248] flex justify-between items-center">
+                    <span class="font-bold text-[#54a4ff] flex items-center gap-1">
+                        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                        エフェクトパラメータ値の調整
+                    </span>
+                    <span class="text-[#828a93] text-[10px]">値の直接編集も反映されます</span>
+                </div>
+                <div class="flex-1 overflow-y-auto rs-scrollbar p-3 space-y-4" id="parameters-container">
+                    <div class="text-center text-[#828a93] py-8">
+                        リストのエフェクト名をクリックするか、エフェクトを有効化するとパラメータ調整パネルが表示されます。
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 右ペイン: 生データのINIプレビュー / ファイル操作ヘルプ -->
+        <aside class="hidden lg:flex w-2/5 bg-[#141618] flex-col overflow-hidden">
+            
+            <div class="p-3 bg-[#1c1f22] border-b border-[#3b4248] flex justify-between items-center">
+                <span class="font-bold text-gray-300 flex items-center gap-1">
+                    <i data-lucide="code" class="w-4 h-4 text-[#54a4ff]"></i>
+                    リアルタイム生成 INI テキスト
+                </span>
+                <button onclick="copyToClipboard()" class="bg-[#202428] border border-[#3b4248] hover:bg-[#2d3339] px-2 py-1 text-xs text-white transition flex items-center gap-1">
+                    <i data-lucide="copy" class="w-3 h-3 text-[#54a4ff]"></i> クリップボードへコピー
+                </button>
+            </div>
+
+            <!-- リアルタイム更新のテキストエリア -->
+            <div class="flex-1 p-2 flex flex-col min-h-0">
+                <textarea id="ini-text-output" readonly 
+                          class="w-full flex-1 bg-[#0c0d0e] text-green-400 font-mono p-3 text-xs border border-[#2d3339] resize-none focus:outline-none rs-scrollbar select-text"></textarea>
+            </div>
+
+            <!-- お役立ちヘルプ・ドラッグドロップエリア -->
+            <div class="p-3.5 bg-[#1c1f22] border-t border-[#3b4248] space-y-2">
+                <h4 class="font-bold text-[#54a4ff] flex items-center gap-1">
+                    <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                    ReShade プリセットインポーター
+                </h4>
+                <p class="text-gray-400 text-[11px] leading-relaxed">
+                    お使いの PC に保存されている <code class="text-yellow-500">.ini</code> プリセットファイルをドラッグ＆ドロップして読み込めます。左側の UI で設定を調整すると、その場で INI の内容が自動再構築されます。
+                </p>
+                <div id="drop-zone" class="border-2 border-dashed border-[#3b4248] hover:border-[#54a4ff] rounded p-4 text-center cursor-pointer transition bg-[#141618]">
+                    <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto mb-1 text-gray-500"></i>
+                    <p class="text-gray-300 font-medium">ここに INI ファイルをドロップ</p>
+                    <p class="text-gray-500 text-[10px]">またはクリックしてファイル選択</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- トースト通知 -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-[#25292d] border-l-4 border-green-500 text-white px-4 py-2.5 rounded shadow-lg transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4 text-green-500"></i>
+        <span id="toast-message">処理が完了しました</span>
+    </div>
+
+    <!-- JavaScript の実装 -->
+    <script>
+        // デモ用プリセットデータ (仕様にあわせて一部をインスタンス名@ファイル名に設定)
+        const demoPresets = {
+            cinematic: `Techniques=AdaptiveSharpen@AdaptiveSharpen.fx,AmbientLight@AmbientLight.fx,Clarity@Clarity.fx,Colourfulness@Colourfulness.fx,Vibrance@Vibrance.fx
+TechniqueSorting=AdaptiveSharpen@AdaptiveSharpen.fx,AmbientLight@AmbientLight.fx,Clarity@Clarity.fx,Colourfulness@Colourfulness.fx,Vibrance@Vibrance.fx
+PreprocessorDefinitions=
+
+[AdaptiveSharpen.fx]
+curve_height=1.200000
+D_comp=0.250000
+L_comp=0.150000
+L_tilt=1.000000
+sharpness=1.500000
+
+[AmbientLight.fx]
+AL_Adaptation=0.700000
+AL_ColorBG=0.000000,0.000000,0.000000,1.000000
+AL_Intensity=1.150000
+AL_Threshold=12.000000
+AL_Vibrance=2.500000
+AL_Warmth=0.500000
+UseAL_Debug=0
+
+[Clarity.fx]
+ClarityRadius=20
+ClarityStrength=0.400000
+ClarityDarkIntensity=0.200000
+ClarityLightIntensity=0.100000
+ClarityOffset=1.500000
+
+[Colourfulness.fx]
+col_strength=0.350000
+col_saturation=1.100000
+
+[Vibrance.fx]
+Vibrance=0.150000
+VibranceRGBBalance=1.000000,0.850000,1.150000`,
+
+            anime: `Techniques=Colourfulness@Colourfulness.fx,Vibrance@Vibrance.fx,HDR@HDR.fx,Levels@Levels.fx
+TechniqueSorting=Levels@Levels.fx,HDR@HDR.fx,Colourfulness@Colourfulness.fx,Vibrance@Vibrance.fx
+PreprocessorDefinitions=USE_HDR=1
+
+[Levels.fx]
+BlackPoint=16
+WhitePoint=235
+
+[HDR.fx]
+HDRPower=1.350000
+radius2=0.850000
+
+[Colourfulness.fx]
+col_strength=0.600000
+col_saturation=1.500000
+
+[Vibrance.fx]
+Vibrance=0.450000
+VibranceRGBBalance=1.000000,1.000000,1.000000`,
+
+            performance: `Techniques=AdaptiveSharpen@AdaptiveSharpen.fx,Vibrance@Vibrance.fx
+TechniqueSorting=AdaptiveSharpen@AdaptiveSharpen.fx,Vibrance@Vibrance.fx
+PreprocessorDefinitions=
+
+[AdaptiveSharpen.fx]
+curve_height=0.800000
+sharpness=1.000000
+
+[Vibrance.fx]
+Vibrance=0.100000`
+        };
+
+        // アプリケーション状態管理
+        let presetData = {
+            techniques: [],         // 有効化されているテクニカル名 (例: ["Clarity@Clarity.fx", ...])
+            techniqueSorting: [],  // テクニカルの並び順 (例: ["Clarity@Clarity.fx", ...])
+            preprocessors: "",      // プリプロセッサ定義文字列
+            shaders: {}            // シェーダー名 => { パラメータキー => 値 }  (例: "Clarity.fx" => { ClarityRadius: "20", ... })
+        };
+
+        let selectedEffect = null; // 現在選択中のエフェクト生名 (例: "Clarity@Clarity.fx")
+        let currentFilename = "cinematic_preset.ini";
+        let isPerformanceMode = false;
+
+        // 【名前解決ヘルパー】"Name@Shader.fx" や "Shader.fx" から "Shader.fx" を抽出
+        function getShaderFilename(tech) {
+            if (!tech) return "";
+            const atIndex = tech.indexOf('@');
+            if (atIndex !== -1) {
+                return tech.slice(atIndex + 1);
+            }
+            return tech;
+        }
+
+        // UI表示用のわかりやすい表記に変換するヘルパー
+        function getFriendlyName(tech) {
+            if (!tech) return "";
+            const atIndex = tech.indexOf('@');
+            if (atIndex !== -1) {
+                const name = tech.slice(0, atIndex);
+                const file = tech.slice(atIndex + 1);
+                return `${name} <span class="text-[10px] text-gray-500 font-normal">(${file})</span>`;
+            }
+            return tech;
+        }
+
+        // 初期ロード
+        window.onload = function() {
+            lucide.createIcons();
+            loadPresetFromText(demoPresets.cinematic, "cinematic_preset.ini");
+
+            // ドラッグアンドドロップイベントのバインド
+            const dropZone = document.getElementById('drop-zone');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-[#54a4ff]', 'bg-[#181b1d]');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-[#54a4ff]', 'bg-[#181b1d]');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-[#54a4ff]', 'bg-[#181b1d]');
+                
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFile(file);
+                }
+            });
+
+            dropZone.addEventListener('click', () => {
+                document.getElementById('ini-file-input').click();
+            });
+
+            document.getElementById('ini-file-input').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFile(file);
+                }
+            });
+        };
+
+        // ファイル読込処理
+        function handleFile(file) {
+            if (!file.name.endsWith('.ini')) {
+                showToast("INIファイルのみアップロード可能です", "border-red-500");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                loadPresetFromText(e.target.result, file.name);
+                document.getElementById('preset-selector').value = "custom";
+                showToast("ファイルをインポートしました");
+            };
+            reader.readAsText(file);
+        }
+
+        // デモ用プリセット読み込み
+        function loadDemoPreset() {
+            const selectVal = document.getElementById('preset-selector').value;
+            const presetKey = selectVal !== "custom" ? selectVal : "cinematic";
+            loadPresetFromText(demoPresets[presetKey], `${presetKey}_preset.ini`);
+            showToast("デモプリセットを再ロードしました");
+        }
+
+        // プリセットセレクトボックス変更
+        function handlePresetSelect(select) {
+            const key = select.value;
+            if (key !== "custom" && demoPresets[key]) {
+                loadPresetFromText(demoPresets[key], `${key}_preset.ini`);
+                showToast(`プリセット: ${key} を適用しました`);
+            }
+        }
+
+        // テキストからプリセット状態を構築
+        function loadPresetFromText(text, filename) {
+            currentFilename = filename;
+            document.getElementById('current-filename').innerText = filename;
+
+            const lines = text.split(/\r?\n/);
+            
+            // 状態リセット
+            presetData = {
+                techniques: [],
+                techniqueSorting: [],
+                preprocessors: "",
+                shaders: {}
+            };
+
+            let currentShader = null;
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line || line.startsWith(';') || line.startsWith('#')) {
+                    continue; // 空白・コメントスキップ
+                }
+
+                // セクションの検出 [ShaderName.fx]
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    currentShader = line.slice(1, -1);
+                    presetData.shaders[currentShader] = {};
+                    continue;
+                }
+
+                // キー・バリューの検出
+                const eqIndex = line.indexOf('=');
+                if (eqIndex !== -1) {
+                    const key = line.slice(0, eqIndex).trim();
+                    const value = line.slice(eqIndex + 1).trim();
+
+                    if (currentShader) {
+                        // パラメータ値のパース
+                        presetData.shaders[currentShader][key] = value;
+                    } else {
+                        // ルートメタデータ
+                        if (key === "Techniques") {
+                            presetData.techniques = value ? value.split(',') : [];
+                        } else if (key === "TechniqueSorting") {
+                            presetData.techniqueSorting = value ? value.split(',') : [];
+                        } else if (key === "PreprocessorDefinitions") {
+                            presetData.preprocessors = value;
+                        }
+                    }
+                }
+            }
+
+            // TechniqueSorting が未設定だが Techniques がある場合はベースに並び順作成
+            if (presetData.techniqueSorting.length === 0) {
+                presetData.techniqueSorting = [...presetData.techniques];
+            }
+
+            // セクションにあるが Sorting に記載がないシェーダーを追記する
+            // 比較の際は getShaderFilename を用いて実シェーダー名で重複をチェック
+            const sortedShaderFiles = presetData.techniqueSorting.map(getShaderFilename);
+            Object.keys(presetData.shaders).forEach(shaderFile => {
+                if (!sortedShaderFiles.includes(shaderFile)) {
+                    presetData.techniqueSorting.push(shaderFile);
+                }
+            });
+
+            // デフォルトの選択エフェクトを最初のものに
+            if (presetData.techniqueSorting.length > 0) {
+                selectedEffect = presetData.techniqueSorting[0];
+            } else {
+                selectedEffect = null;
+            }
+
+            // レンダリング＆UI更新
+            renderEffectsList();
+            renderParametersPanel();
+            updateINIPreview();
+        }
+
+        // タイプ推測
+        function guessType(key, value) {
+            // 色 (RGBA/RGB) の推測: コンマ区切りで 3〜4つの数値、かつそれらが [0, 1] または [0, 255]
+            if (value.includes(',')) {
+                const parts = value.split(',');
+                if (parts.length === 3 || parts.length === 4) {
+                    const nums = parts.map(Number);
+                    const isAllNums = nums.every(n => !isNaN(n));
+                    if (isAllNums) {
+                        const isColorLikeKey = /color|bg|fg|tint|diffuse|ambient/i.test(key);
+                        if (isColorLikeKey) {
+                            return 'color';
+                        }
+                        return 'vector';
+                    }
+                }
+            }
+
+            // Booleanの推測 (0 or 1 で、かつトグルの意味を持ちそうなキー名)
+            if (value === "0" || value === "1") {
+                const isBoolLikeKey = /use|enable|toggle|debug|active|on|show|draw|blur/i.test(key);
+                if (isBoolLikeKey) return 'bool';
+            }
+
+            // Floatの推測
+            if (value.includes('.')) {
+                const num = Number(value);
+                if (!isNaN(num)) return 'float';
+            }
+
+            // Intの推測
+            const intNum = Number(value);
+            if (!isNaN(intNum) && Number.isInteger(intNum)) {
+                return 'int';
+            }
+
+            return 'string';
+        }
+
+        // 浮動小数カラー (0-1) を HEX に変換
+        function floatColorToHex(floatStr) {
+            const parts = floatStr.split(',').map(Number);
+            const r = Math.round((parts[0] || 0) * 255);
+            const g = Math.round((parts[1] || 0) * 255);
+            const b = Math.round((parts[2] || 0) * 255);
+            
+            const toHex = (c) => {
+                const hex = Math.max(0, Math.min(255, c)).toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            };
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        // HEXカラーを 浮動小数カラー (0-1) 文字列に戻す
+        function hexToFloatColor(hex, originalLength) {
+            let r = parseInt(hex.slice(1, 3), 16) / 255;
+            let g = parseInt(hex.slice(3, 5), 16) / 255;
+            let b = parseInt(hex.slice(5, 7), 16) / 255;
+
+            // 固定小数6桁
+            const fix = n => n.toFixed(6);
+
+            if (originalLength === 4) {
+                // RGBA
+                return `${fix(r)},${fix(g)},${fix(b)},1.000000`;
+            }
+            return `${fix(r)},${fix(g)},${fix(b)}`;
+        }
+
+        // エフェクトリストのレンダリング
+        function renderEffectsList() {
+            const container = document.getElementById('effects-list-container');
+            const filterInput = document.getElementById('effect-filter').value.toLowerCase();
+            const activeToTop = document.getElementById('active-to-top').checked;
+
+            container.innerHTML = '';
+
+            // リスト表示順序の決定
+            let sortedShaders = [...presetData.techniqueSorting];
+
+            if (activeToTop) {
+                sortedShaders.sort((a, b) => {
+                    const aActive = presetData.techniques.includes(a) ? 1 : 0;
+                    const bActive = presetData.techniques.includes(b) ? 1 : 0;
+                    return bActive - aActive; // 有効化されているものを上に
+                });
+            }
+
+            let filteredCount = 0;
+            let totalActive = 0;
+
+            sortedShaders.forEach((shader, index) => {
+                const isActive = presetData.techniques.includes(shader);
+                if (isActive) totalActive++;
+
+                // フィルター検索の評価 (生名、フレンドリー表記、またはその内部のパラメータキー)
+                const shaderFile = getShaderFilename(shader);
+                const hasMatchingParams = Object.keys(presetData.shaders[shaderFile] || {}).some(k => k.toLowerCase().includes(filterInput));
+                const isMatchFilter = shader.toLowerCase().includes(filterInput) || hasMatchingParams;
+
+                if (filterInput && !isMatchFilter) return;
+                filteredCount++;
+
+                const isSelected = selectedEffect === shader;
+
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-2 mb-1 border rounded transition group cursor-pointer ${
+                    isSelected ? 'bg-[#2d3339] border-[#54a4ff]' : 'bg-[#181b1d]/50 border-[#2d3339] hover:bg-[#202428]'
+                }`;
+                item.setAttribute('onclick', `selectEffect('${shader}')`);
+
+                // 有効化トグル、名前、順序変更ボタン
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2.5 flex-1 min-w-0" onclick="event.stopPropagation(); selectEffect('${shader}')">
+                        <input type="checkbox" class="rs-checkbox" ${isActive ? 'checked' : ''} 
+                               onchange="toggleEffect('${shader}', this.checked); event.stopPropagation();">
+                        <span class="truncate font-medium group-hover:text-white ${isActive ? 'text-white' : 'text-[#828a93]'}">
+                            ${getFriendlyName(shader)}
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-1 opacity-60 group-hover:opacity-100" onclick="event.stopPropagation();">
+                        <!-- 上下順序ボタン -->
+                        <button onclick="moveShader('${shader}', -1)" class="p-1 hover:text-[#54a4ff] hover:bg-[#181b1d] rounded" title="順序を上げる">
+                            <i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="moveShader('${shader}', 1)" class="p-1 hover:text-[#54a4ff] hover:bg-[#181b1d] rounded" title="順序を下げる">
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(item);
+            });
+
+            // 件数表示の更新
+            document.getElementById('active-count').innerText = totalActive;
+            document.getElementById('total-count').innerText = presetData.techniqueSorting.length;
+
+            if (filteredCount === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-[#828a93] py-8">
+                        一致するエフェクトが見つかりません
+                    </div>
+                `;
+            }
+
+            lucide.createIcons();
+        }
+
+        // エフェクト選択時のパラメータパネル更新
+        function selectEffect(shader) {
+            selectedEffect = shader;
+            renderEffectsList(); // ハイライト更新
+            renderParametersPanel();
+        }
+
+        // エフェクトの有効/無効化
+        function toggleEffect(shader, isChecked) {
+            if (isChecked) {
+                if (!presetData.techniques.includes(shader)) {
+                    presetData.techniques.push(shader);
+                }
+            } else {
+                presetData.techniques = presetData.techniques.filter(t => t !== shader);
+            }
+            renderEffectsList();
+            updateINIPreview();
+
+            // 自動的にパラメータ表示エフェクトを選択
+            if (isChecked) {
+                selectedEffect = shader;
+                renderParametersPanel();
+            }
+        }
+
+        // 全エフェクトのトグル
+        function toggleAllEffects(active) {
+            if (active) {
+                presetData.techniques = [...presetData.techniqueSorting];
+            } else {
+                presetData.techniques = [];
+            }
+            renderEffectsList();
+            renderParametersPanel();
+            updateINIPreview();
+            showToast(active ? "すべて有効にしました" : "すべて無効にしました");
+        }
+
+        // エフェクト順序移動
+        function moveShader(shader, direction) {
+            const idx = presetData.techniqueSorting.indexOf(shader);
+            if (idx === -1) return;
+
+            const targetIdx = idx + direction;
+            if (targetIdx < 0 || targetIdx >= presetData.techniqueSorting.length) return;
+
+            // スワップ
+            const temp = presetData.techniqueSorting[idx];
+            presetData.techniqueSorting[idx] = presetData.techniqueSorting[targetIdx];
+            presetData.techniqueSorting[targetIdx] = temp;
+
+            renderEffectsList();
+            updateINIPreview();
+        }
+
+        // パフォーマンスモード切替
+        function togglePerformanceMode(checkbox) {
+            isPerformanceMode = checkbox.checked;
+            const warning = document.getElementById('performance-warning');
+            
+            if (isPerformanceMode) {
+                warning.classList.remove('hidden');
+                showToast("パフォーマンスモード有効: UI描画負荷を抑制します");
+            } else {
+                warning.classList.add('hidden');
+                showToast("通常モードに戻りました");
+            }
+            renderParametersPanel();
+        }
+
+        // パラメータパネルのレンダリング
+        function renderParametersPanel() {
+            const container = document.getElementById('parameters-container');
+            container.innerHTML = '';
+
+            if (!selectedEffect) {
+                container.innerHTML = `
+                    <div class="text-center text-[#828a93] py-8">
+                        左側からエフェクトをクリックして選択してください。
+                    </div>
+                `;
+                return;
+            }
+
+            // getShaderFilename を使って、セクション名 [Shader.fx] とパラメータを一致させる
+            const shaderFile = getShaderFilename(selectedEffect);
+            const params = presetData.shaders[shaderFile] || {};
+            const paramKeys = Object.keys(params);
+
+            if (paramKeys.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-[#828a93] py-8">
+                        <div class="font-bold text-gray-400">[${shaderFile}]</div>
+                        <div class="mt-1 text-xs">このエフェクトには調整可能なパラメータが保存されていません。</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // シェーダータイトルヘッダー
+            const header = document.createElement('div');
+            header.className = "flex items-center justify-between border-b border-[#2d3339] pb-2 mb-3";
+            header.innerHTML = `
+                <div class="text-white font-bold text-sm flex items-center gap-1.5">
+                    <span class="text-[#54a4ff]">${selectedEffect.split('@')[0]}</span>
+                    <span class="text-gray-500 font-normal text-[10px]">${shaderFile}</span>
+                </div>
+                <div class="text-[#828a93]">${paramKeys.length} つのパラメータ</div>
+            `;
+            container.appendChild(header);
+
+            paramKeys.forEach(key => {
+                const valueStr = params[key];
+                const type = guessType(key, valueStr);
+                const controlRow = document.createElement('div');
+                controlRow.className = "space-y-1.5 p-2 bg-[#181b1d]/40 border border-[#2d3339]/50 rounded hover:bg-[#181b1d]/70 transition";
+
+                // パラメータラベル
+                let labelHtml = `<div class="flex justify-between items-center text-gray-300">
+                    <span class="font-bold truncate" title="${key}">${key}</span>
+                    <span class="text-[10px] text-[#828a93] bg-[#2d3339] px-1 rounded uppercase tracking-wider">${type}</span>
+                </div>`;
+
+                let controlHtml = '';
+
+                // 推測した型に基づきUI生成
+                if (type === 'bool') {
+                    const checked = valueStr === "1";
+                    controlHtml = `
+                        <div class="flex items-center justify-between py-1">
+                            <span class="text-[#828a93]">ON / OFF</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="rs-checkbox" ${checked ? 'checked' : ''} 
+                                       onchange="updateParameterValue('${selectedEffect}', '${key}', this.checked ? '1' : '0')">
+                            </label>
+                        </div>
+                    `;
+                } 
+                else if (type === 'float') {
+                    const currentVal = parseFloat(valueStr);
+                    // レンジを現在の値から自動的に推測
+                    let min = 0.0;
+                    let max = 2.0;
+                    let step = 0.01;
+
+                    if (currentVal < 0) {
+                        min = currentVal * 2;
+                        max = 0.0;
+                    } else if (currentVal > 2) {
+                        min = 0.0;
+                        max = currentVal * 1.5;
+                    }
+                    
+                    if (Math.abs(currentVal) > 10) {
+                        step = 0.1;
+                    }
+                    if (Math.abs(currentVal) > 100) {
+                        step = 1.0;
+                    }
+
+                    controlHtml = `
+                        <div class="flex items-center space-x-2">
+                            <input type="range" min="${min}" max="${max}" step="${step}" value="${currentVal}" 
+                                   class="flex-1"
+                                   oninput="updateSliderValue(this, '${selectedEffect}', '${key}', 'float')">
+                            <input type="number" step="${step}" value="${currentVal}" 
+                                   class="w-16 bg-[#181b1d] text-white border border-[#3b4248] text-right px-1 py-0.5 font-mono"
+                                   onchange="updateParameterValue('${selectedEffect}', '${key}', this.value)">
+                        </div>
+                    `;
+                } 
+                else if (type === 'int') {
+                    const currentVal = parseInt(valueStr);
+                    let min = 0;
+                    let max = 255;
+                    if (currentVal > 255) max = currentVal * 2;
+
+                    controlHtml = `
+                        <div class="flex items-center space-x-2">
+                            <input type="range" min="${min}" max="${max}" step="1" value="${currentVal}" 
+                                   class="flex-1"
+                                   oninput="updateSliderValue(this, '${selectedEffect}', '${key}', 'int')">
+                            <input type="number" step="1" value="${currentVal}" 
+                                   class="w-16 bg-[#181b1d] text-white border border-[#3b4248] text-right px-1 py-0.5 font-mono"
+                                   onchange="updateParameterValue('${selectedEffect}', '${key}', this.value)">
+                        </div>
+                    `;
+                } 
+                else if (type === 'color') {
+                    const hexColor = floatColorToHex(valueStr);
+                    const isRGBA = valueStr.split(',').length === 4;
+                    controlHtml = `
+                        <div class="flex items-center space-x-2.5">
+                            <input type="color" value="${hexColor}" 
+                                   class="w-8 h-8 bg-transparent border-0 cursor-pointer"
+                                   oninput="updateColorValue('${selectedEffect}', '${key}', this.value, ${isRGBA})">
+                            <div class="flex-1 grid grid-cols-1 gap-1 text-[10px]">
+                                <span class="text-gray-400 font-mono bg-[#141618] px-1.5 py-1 text-center border border-[#2d3339]">
+                                    HEX: <span class="text-[#54a4ff]">${hexColor.toUpperCase()}</span>
+                                </span>
+                                <input type="text" value="${valueStr}" 
+                                       class="bg-[#181b1d] text-[#828a93] border border-[#3b4248] px-1.5 py-0.5 text-center font-mono"
+                                       onchange="updateParameterValue('${selectedEffect}', '${key}', this.value)">
+                            </div>
+                        </div>
+                    `;
+                }
+                else {
+                    controlHtml = `
+                        <input type="text" value="${valueStr}" 
+                               class="w-full bg-[#181b1d] text-white border border-[#3b4248] font-mono px-2 py-1"
+                               onchange="updateParameterValue('${selectedEffect}', '${key}', this.value)">
+                    `;
+                }
+
+                controlRow.innerHTML = labelHtml + controlHtml;
+                container.appendChild(controlRow);
+            });
+        }
+
+        // スライダーの値が変化した際
+        function updateSliderValue(slider, shader, key, numType) {
+            const val = slider.value;
+            const numBox = slider.nextElementSibling;
+            if (numBox) numBox.value = val;
+
+            let formattedVal = val;
+            if (numType === 'float') {
+                formattedVal = parseFloat(val).toFixed(6);
+            }
+
+            updateParameterValue(shader, key, formattedVal, false); // プレビューのみ更新
+        }
+
+        // カラー値が変化した際
+        function updateColorValue(shader, key, hexColor, isRGBA) {
+            const val = hexToFloatColor(hexColor, isRGBA ? 4 : 3);
+            updateParameterValue(shader, key, val);
+        }
+
+        // パラメータ値の確定更新
+        function updateParameterValue(shader, key, value, triggerFullRender = true) {
+            const shaderFile = getShaderFilename(shader);
+            
+            if (!presetData.shaders[shaderFile]) {
+                presetData.shaders[shaderFile] = {};
+            }
+            presetData.shaders[shaderFile][key] = value;
+
+            // リアルタイムテキスト更新
+            updateINIPreview();
+
+            // パフォーマンスモードでなく、強制再描画が有効なら更新
+            if (triggerFullRender && !isPerformanceMode) {
+                const isColor = guessType(key, value) === 'color';
+                if (!isColor) {
+                    renderParametersPanel();
+                }
+            }
+        }
+
+        // INIテキストデータの再構成とUIプレビューへの反映
+        function serializeINI() {
+            let lines = [];
+            
+            // メタデータ
+            lines.push(`Techniques=${presetData.techniques.join(',')}`);
+            lines.push(`TechniqueSorting=${presetData.techniqueSorting.join(',')}`);
+            lines.push(`PreprocessorDefinitions=${presetData.preprocessors}`);
+            lines.push(""); // 空行
+
+            // セクション順序に基づいて重複排除しながらセクション書き出し
+            const writtenSections = new Set();
+
+            presetData.techniqueSorting.forEach(tech => {
+                const shaderFile = getShaderFilename(tech);
+                if (writtenSections.has(shaderFile)) return;
+                writtenSections.add(shaderFile);
+
+                const params = presetData.shaders[shaderFile];
+                if (params && Object.keys(params).length > 0) {
+                    lines.push(`[${shaderFile}]`);
+                    Object.keys(params).forEach(key => {
+                        lines.push(`${key}=${params[key]}`);
+                    });
+                    lines.push(""); // セクション間の空行
+                }
+            });
+
+            // sortingに含まれていない未処理のパラメータセクションがあれば追加
+            Object.keys(presetData.shaders).forEach(shaderFile => {
+                if (!writtenSections.has(shaderFile)) {
+                    writtenSections.add(shaderFile);
+                    const params = presetData.shaders[shaderFile];
+                    if (params && Object.keys(params).length > 0) {
+                        lines.push(`[${shaderFile}]`);
+                        Object.keys(params).forEach(key => {
+                            lines.push(`${key}=${params[key]}`);
+                        });
+                        lines.push("");
+                    }
+                }
+            });
+
+            return lines.join("\n").trim() + "\n";
+        }
+
+        // プレビューテキストのリアルタイム更新
+        function updateINIPreview() {
+            const outText = serializeINI();
+            document.getElementById('ini-text-output').value = outText;
+        }
+
+        // INIファイルのエクスポート
+        function exportINI() {
+            const text = serializeINI();
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast(`${currentFilename} をエクスポートしました`);
+        }
+
+        // クリップボードへコピー
+        function copyToClipboard() {
+            const textarea = document.getElementById('ini-text-output');
+            textarea.select();
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges(); // 選択解除
+            showToast("INIテキストをクリップボードにコピーしました");
+        }
+
+        // トースト通知の表示
+        function showToast(message, borderClass = "border-green-500") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            
+            // クラスのリセットと設定
+            toast.className = `fixed bottom-4 right-4 bg-[#25292d] border-l-4 ${borderClass} text-white px-4 py-2.5 rounded shadow-lg transition-all duration-300 z-50 flex items-center gap-2`;
+            toastMsg.innerText = message;
+            
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+                toast.classList.remove('opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
