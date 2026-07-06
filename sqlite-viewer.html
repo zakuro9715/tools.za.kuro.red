@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="ja" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQLite データベースビューワー</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- sql.js (WebAssembly SQLite in the browser) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-200">
+
+    <!-- ヘッダー -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex flex-wrap justify-between items-center gap-4 shrink-0 shadow-sm">
+        <div class="flex items-center space-x-3">
+            <div class="bg-brand-500 text-white p-2 rounded-lg shadow-md shadow-brand-500/20">
+                <i data-lucide="database" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">SQLite Web Viewer</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">ブラウザ完結型の安全なデータベースビューワー</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- サンプルデータベース作成 -->
+            <button id="btn-sample-db" class="flex items-center space-x-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium transition-colors border border-slate-200 dark:border-slate-600">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <span>サンプルDBを読込</span>
+            </button>
+            
+            <!-- ファイル選択ボタン -->
+            <label class="flex items-center space-x-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-brand-500/10">
+                <i data-lucide="upload" class="w-4 h-4"></i>
+                <span>ファイルを選択</span>
+                <input type="file" id="file-input" class="hidden" accept=".db,.sqlite,.sqlite3,.sqlite3-shm,.sqlite3-wal">
+            </label>
+
+            <!-- ダークモード切り替え -->
+            <button id="btn-theme-toggle" class="p-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-slate-600 dark:text-slate-300 transition-colors">
+                <i id="theme-icon" data-lucide="moon" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-1 flex overflow-hidden min-h-0 relative">
+        <!-- ドロップゾーンオーバーレイ -->
+        <div id="drop-zone" class="absolute inset-0 bg-brand-500/10 dark:bg-brand-500/20 backdrop-blur-sm border-4 border-dashed border-brand-500 z-50 flex flex-col items-center justify-center pointer-events-none opacity-0 transition-opacity duration-200">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl flex flex-col items-center max-w-sm text-center">
+                <div class="bg-brand-100 dark:bg-brand-900 text-brand-500 p-4 rounded-full mb-4 animate-bounce">
+                    <i data-lucide="upload-cloud" class="w-12 h-12"></i>
+                </div>
+                <h3 class="text-lg font-bold mb-1">ここにデータベースをドロップ</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">.db, .sqlite ファイルを自動的にパースして展開します。</p>
+            </div>
+        </div>
+
+        <!-- 読み込み中表示 -->
+        <div id="loading-spinner" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl flex flex-col items-center space-y-4">
+                <div class="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-sm font-semibold">WebAssemblyモジュールを準備中...</p>
+            </div>
+        </div>
+
+        <!-- サイドバー: テーブル一覧 -->
+        <aside class="w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full shrink-0">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700">
+                <div class="relative">
+                    <input type="text" id="table-search" placeholder="テーブルを検索..." class="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-500">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                </div>
+            </div>
+
+            <!-- テーブルリスト -->
+            <div class="flex-1 overflow-y-auto p-2 space-y-1" id="table-list-container">
+                <!-- 初期表示プレースホルダー -->
+                <div class="text-center py-12 px-4 text-slate-400 dark:text-slate-500">
+                    <i data-lucide="file-question" class="w-12 h-12 mx-auto mb-2 opacity-60"></i>
+                    <p class="text-xs">ファイルをアップロードするか、サンプルDBを読み込んでください。</p>
+                </div>
+            </div>
+
+            <!-- ファイル情報フッター -->
+            <div id="file-info-footer" class="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-850 hidden">
+                <div class="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 truncate mb-1">
+                    <i data-lucide="file" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span id="info-filename" class="font-medium truncate">No file loaded</span>
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-400">
+                    <span id="info-filesize">-</span>
+                    <span id="info-tables-count">-</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- メイン表示領域 -->
+        <section class="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-950">
+            <!-- タブヘッダー -->
+            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 flex justify-between items-center shrink-0">
+                <div class="flex space-x-6">
+                    <button id="tab-data" class="py-4 border-b-2 border-brand-500 text-brand-500 font-medium text-sm flex items-center space-x-1.5 transition-all">
+                        <i data-lucide="table-2" class="w-4 h-4"></i>
+                        <span>テーブルビュー</span>
+                    </button>
+                    <button id="tab-query" class="py-4 border-b-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600 text-slate-500 dark:text-slate-400 font-medium text-sm flex items-center space-x-1.5 transition-all">
+                        <i data-lucide="terminal" class="w-4 h-4"></i>
+                        <span>SQLクエリ</span>
+                    </button>
+                    <button id="tab-info" class="py-4 border-b-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600 text-slate-500 dark:text-slate-400 font-medium text-sm flex items-center space-x-1.5 transition-all">
+                        <i data-lucide="info" class="w-4 h-4"></i>
+                        <span>データベース情報</span>
+                    </button>
+                </div>
+                <!-- データベース名表示 -->
+                <div id="db-status-badge" class="hidden text-xs bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-2.5 py-1 rounded-full font-medium flex items-center space-x-1 border border-emerald-100 dark:border-emerald-900/50">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span id="active-db-name">DB Loaded</span>
+                </div>
+            </div>
+
+            <!-- 通知トースト用コンテナ -->
+            <div id="toast-container" class="absolute top-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+            <!-- コンテンツエリア -->
+            <div class="flex-1 overflow-hidden relative">
+
+                <!-- 1. テーブルビューパネル -->
+                <div id="panel-data" class="h-full flex flex-col">
+                    <!-- データフィルタ/検索/操作バー -->
+                    <div class="p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-3 shrink-0">
+                        <div class="flex items-center space-x-3 flex-1 min-w-[280px]">
+                            <h2 class="text-base font-semibold truncate flex items-center space-x-2">
+                                <i data-lucide="table" class="w-4 h-4 text-brand-500"></i>
+                                <span id="current-table-title" class="text-slate-500">テーブルを選択してください</span>
+                            </h2>
+                            <div class="relative max-w-xs w-full">
+                                <input type="text" id="row-filter" placeholder="表示データを検索..." class="w-full pl-8 pr-8 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" disabled>
+                                <i data-lucide="filter" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                                <button id="clear-filter" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 hidden">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ページネーション & 操作 -->
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-1 bg-slate-100 dark:bg-slate-700 p-0.5 rounded-lg text-xs">
+                                <button id="btn-prev-page" class="p-1 hover:bg-white dark:hover:bg-slate-600 rounded transition-colors" disabled>
+                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                </button>
+                                <span class="px-2 text-slate-600 dark:text-slate-300" id="page-indicator">0 / 0</span>
+                                <button id="btn-next-page" class="p-1 hover:bg-white dark:hover:bg-slate-600 rounded transition-colors" disabled>
+                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <select id="page-size-select" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1 px-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none" disabled>
+                                <option value="20">20件</option>
+                                <option value="50" selected>50件</option>
+                                <option value="100">100件</option>
+                                <option value="500">500件</option>
+                            </select>
+                            <button id="btn-export-table" class="flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg text-xs font-medium transition-colors" disabled>
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>CSV出力</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- データテーブル本体 -->
+                    <div class="flex-1 overflow-auto relative bg-white dark:bg-slate-900" id="data-grid-container">
+                        <table class="w-full text-left border-collapse" id="data-table">
+                            <thead class="bg-slate-50 dark:bg-slate-800 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
+                                <tr id="table-headers">
+                                    <!-- 動的に生成されます -->
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
+                                <!-- テーブルが読み込まれていない、または選択されていない場合のプレースホルダー -->
+                                <tr>
+                                    <td colspan="100" class="text-center py-24 text-slate-400 dark:text-slate-500">
+                                        <i data-lucide="database-backup" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                                        <p class="text-sm">表示するデータがありません。テーブルを選択してください。</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2. SQLクエリパネル -->
+                <div id="panel-query" class="h-full flex flex-col hidden p-6 space-y-4">
+                    <!-- エディタおよび設定 -->
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col space-y-3">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="terminal" class="w-5 h-5 text-brand-500"></i>
+                                <span class="font-semibold text-sm">SQLクエリエディタ</span>
+                            </div>
+                            <!-- クエリショートカット -->
+                            <div class="flex space-x-2">
+                                <button onclick="insertQuerySnippet('SELECT * FROM ')" class="text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 px-2 py-1 rounded transition-colors">SELECT *</button>
+                                <button onclick="insertQuerySnippet('SELECT COUNT(*) FROM ')" class="text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 px-2 py-1 rounded transition-colors">COUNT(*)</button>
+                                <button onclick="insertQuerySnippet('sqlite_master')" class="text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 px-2 py-1 rounded transition-colors">テーブル一覧</button>
+                            </div>
+                        </div>
+
+                        <!-- 実際のテキストエリア -->
+                        <div class="relative">
+                            <textarea id="sql-textarea" rows="6" placeholder="例: SELECT * FROM users WHERE active = 1 LIMIT 50;" class="w-full p-4 font-mono text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none transition-shadow duration-200" disabled></textarea>
+                        </div>
+
+                        <!-- ボタン類 -->
+                        <div class="flex justify-between items-center">
+                            <div class="text-xs text-slate-400 flex items-center space-x-1">
+                                <i data-lucide="keyboard" class="w-3.5 h-3.5"></i>
+                                <span>Cmd+Enter / Ctrl+Enter でクエリ実行</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button id="btn-clear-sql" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors">クリア</button>
+                                <button id="btn-run-sql" class="flex items-center space-x-1.5 px-5 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold shadow-sm shadow-brand-500/15 transition-colors" disabled>
+                                    <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                                    <span>クエリを実行</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- エラー表示領域 -->
+                    <div id="sql-error-box" class="bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/40 p-4 rounded-xl flex items-start space-x-3 hidden text-rose-800 dark:text-rose-400">
+                        <i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                        <div class="text-xs font-mono">
+                            <h4 class="font-bold mb-1">SQLエラーが発生しました</h4>
+                            <p id="sql-error-text"></p>
+                        </div>
+                    </div>
+
+                    <!-- クエリ結果 -->
+                    <div class="flex-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden min-h-[200px]">
+                        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center shrink-0">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">実行結果</span>
+                            <div id="query-result-actions" class="flex items-center space-x-3 hidden">
+                                <span class="text-xs text-slate-500" id="query-rows-count">0 件取得</span>
+                                <div class="flex space-x-1">
+                                    <button id="btn-copy-query-json" class="flex items-center space-x-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-[11px] font-medium transition-colors border border-slate-200 dark:border-slate-600">
+                                        <i data-lucide="copy" class="w-3 h-3"></i>
+                                        <span>JSONをコピー</span>
+                                    </button>
+                                    <button id="btn-export-query-csv" class="flex items-center space-x-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-[11px] font-medium transition-colors border border-slate-200 dark:border-slate-600">
+                                        <i data-lucide="download" class="w-3 h-3"></i>
+                                        <span>CSVエクスポート</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900/40" id="query-grid-container">
+                            <table class="w-full text-left border-collapse" id="query-table">
+                                <thead class="bg-slate-100 dark:bg-slate-800 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
+                                    <tr id="query-headers">
+                                        <!-- 動的に生成されます -->
+                                    </tr>
+                                </thead>
+                                <tbody id="query-body" class="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
+                                    <tr>
+                                        <td class="text-center py-20 text-slate-400 dark:text-slate-500">
+                                            <i data-lucide="play-circle" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                                            <p class="text-sm">クエリを実行すると、結果がここに表示されます。</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. データベース情報パネル -->
+                <div id="panel-info" class="h-full overflow-y-auto p-6 hidden">
+                    <div class="max-w-4xl mx-auto space-y-6">
+                        <!-- 基本情報カード -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                            <h3 class="text-lg font-bold mb-4 flex items-center space-x-2">
+                                <i data-lucide="hard-drive" class="w-5 h-5 text-brand-500"></i>
+                                <span>データベース基本特性</span>
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg">
+                                    <span class="text-xs text-slate-400">ファイル名</span>
+                                    <p class="text-sm font-semibold truncate mt-1" id="info-meta-name">-</p>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg">
+                                    <span class="text-xs text-slate-400">ファイルサイズ</span>
+                                    <p class="text-sm font-semibold mt-1" id="info-meta-size">-</p>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg">
+                                    <span class="text-xs text-slate-400">総テーブル数</span>
+                                    <p class="text-sm font-semibold mt-1" id="info-meta-tables">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- データベース設定 (PRAGMA) -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                            <h3 class="text-lg font-bold mb-4 flex items-center space-x-2">
+                                <i data-lucide="sliders" class="w-5 h-5 text-brand-500"></i>
+                                <span>システム PRAGMA 設定</span>
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead>
+                                        <tr class="border-b border-slate-200 dark:border-slate-700 text-slate-400 text-xs">
+                                            <th class="pb-2">PRAGMA項目</th>
+                                            <th class="pb-2">設定値</th>
+                                            <th class="pb-2">解説</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 text-xs" id="pragma-table-body">
+                                        <!-- Javascriptで設定 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- データベース一覧 (メタテーブル) -->
+                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                            <h3 class="text-lg font-bold mb-4 flex items-center space-x-2">
+                                <i data-lucide="table-properties" class="w-5 h-5 text-brand-500"></i>
+                                <span>スキーマメタデータ (sqlite_master)</span>
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm" id="schema-meta-table">
+                                    <thead>
+                                        <tr class="border-b border-slate-200 dark:border-slate-700 text-slate-400 text-xs">
+                                            <th class="pb-2">Type</th>
+                                            <th class="pb-2">Name</th>
+                                            <th class="pb-2">Table Name</th>
+                                            <th class="pb-2">SQL Definition</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 text-xs font-mono" id="schema-meta-body">
+                                        <tr>
+                                            <td colspan="4" class="text-center py-6 text-slate-400">データベースがロードされていません。</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- JSメインスクリプト -->
+    <script>
+        // グローバルアプリケーションステート
+        const state = {
+            db: null,             // sql.js データベースインスタンス
+            SQL: null,            // sql.js ライブラリ
+            tables: [],           // テーブル名の配列
+            activeTable: null,    // 現在選択されているテーブル
+            activeTableData: [],  // 現在のテーブルのロードデータ
+            filteredData: [],     // フィルタリングされたデータ
+            tableColumns: [],     // 現在のテーブルのカラム定義
+            pageSize: 50,         // 1ページ表示サイズ
+            currentPage: 1,       // 現在のページ
+            theme: 'dark'         // UI テーマ
+        };
+
+        // 初期化処理
+        window.addEventListener('DOMContentLoaded', async () => {
+            initLucide();
+            setupTheme();
+            setupEventListeners();
+            await initSqlJsModule();
+        });
+
+        function initLucide() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // WebAssembly sql.js の初期化
+        async function initSqlJsModule() {
+            showLoading(true, "WebAssemblyモジュールをロード中...");
+            try {
+                // CDNから sql.js をロード
+                state.SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+                });
+                showToast("success", "SQLiteエンジンの準備完了");
+            } catch (err) {
+                console.error("SQL.js の初期化エラー:", err);
+                showToast("error", "SQLiteエンジンの初期化に失敗しました。ページをリロードしてください。");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 読み込み中スピナー制御
+        function showLoading(show, message = "") {
+            const spinner = document.getElementById('loading-spinner');
+            const p = spinner.querySelector('p');
+            if (p && message) p.textContent = message;
+            
+            if (show) {
+                spinner.classList.remove('hidden');
+            } else {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        // テーマ切り替え (ダーク/ライト)
+        function setupTheme() {
+            const themeBtn = document.getElementById('btn-theme-toggle');
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            
+            setTheme(savedTheme);
+
+            themeBtn.addEventListener('click', () => {
+                const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                setTheme(next);
+            });
+        }
+
+        function setTheme(theme) {
+            const themeIcon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            state.theme = theme;
+            localStorage.setItem('theme', theme);
+            initLucide();
+        }
+
+        // イベントリスナーのセットアップ
+        function setupEventListeners() {
+            // ファイルアップロード関連
+            const fileInput = document.getElementById('file-input');
+            fileInput.addEventListener('change', handleFileSelect);
+
+            const dropZone = document.getElementById('drop-zone');
+            window.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('opacity-0');
+            });
+            window.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            window.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                // 親要素から離脱した場合のみ非表示に
+                if (e.relatedTarget === null) {
+                    dropZone.classList.add('opacity-0');
+                }
+            });
+            window.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('opacity-0');
+                if (e.dataTransfer.files.length > 0) {
+                    processDatabaseFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // サンプルデータ読み込み
+            document.getElementById('btn-sample-db').addEventListener('click', loadSampleDatabase);
+
+            // タブ切り替え
+            setupTabNavigation();
+
+            // テーブルデータ画面系の操作
+            document.getElementById('table-search').addEventListener('input', filterTableList);
+            document.getElementById('row-filter').addEventListener('input', handleRowFilter);
+            document.getElementById('clear-filter').addEventListener('click', clearRowFilter);
+            
+            document.getElementById('btn-prev-page').addEventListener('click', () => changePage(-1));
+            document.getElementById('btn-next-page').addEventListener('click', () => changePage(1));
+            document.getElementById('page-size-select').addEventListener('change', handlePageSizeChange);
+            document.getElementById('btn-export-table').addEventListener('click', exportActiveTableToCSV);
+
+            // クエリ画面系の操作
+            document.getElementById('btn-run-sql').addEventListener('click', executeCustomQuery);
+            document.getElementById('btn-clear-sql').addEventListener('click', () => {
+                document.getElementById('sql-textarea').value = '';
+            });
+            document.getElementById('btn-export-query-csv').addEventListener('click', exportQueryResultsToCSV);
+            document.getElementById('btn-copy-query-json').addEventListener('click', copyQueryResultsToJSON);
+
+            // ショートカットキー (Cmd/Ctrl + Enter) でクエリを実行する
+            document.getElementById('sql-textarea').addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    executeCustomQuery();
+                }
+            });
+        }
+
+        // タブ切り替え制御
+        function setupTabNavigation() {
+            const tabs = {
+                data: { btn: document.getElementById('tab-data'), panel: document.getElementById('panel-data') },
+                query: { btn: document.getElementById('tab-query'), panel: document.getElementById('panel-query') },
+                info: { btn: document.getElementById('tab-info'), panel: document.getElementById('panel-info') }
+            };
+
+            Object.keys(tabs).forEach(key => {
+                tabs[key].btn.addEventListener('click', () => {
+                    // 全タブのリセット
+                    Object.keys(tabs).forEach(k => {
+                        tabs[k].btn.className = "py-4 border-b-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600 text-slate-500 dark:text-slate-400 font-medium text-sm flex items-center space-x-1.5 transition-all";
+                        tabs[k].panel.classList.add('hidden');
+                    });
+                    
+                    // 選択されたタブの強調表示
+                    tabs[key].btn.className = "py-4 border-b-2 border-brand-500 text-brand-500 font-medium text-sm flex items-center space-x-1.5 transition-all";
+                    tabs[key].panel.classList.remove('hidden');
+
+                    // アイコンのアクティブ更新
+                    initLucide();
+                });
+            });
+        }
+
+        // ファイルロード処理
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                processDatabaseFile(files[0]);
+            }
+        }
+
+        // データベースファイルを解釈して展開
+        function processDatabaseFile(file) {
+            if (!state.SQL) {
+                showToast("error", "SQLiteエンジンがロードされていません");
+                return;
+            }
+
+            showLoading(true, "データベースファイルを読み込み中...");
+
+            const reader = new FileReader();
+            reader.onload = function() {
+                try {
+                    const Uints = new Uint8Array(reader.result);
+                    
+                    // 既存のDBがあれば閉じる
+                    if (state.db) {
+                        state.db.close();
+                    }
+
+                    // 新しいDBを初期化
+                    state.db = new state.SQL.Database(Uints);
+                    
+                    showToast("success", `${file.name} を読み込みました`);
+                    onDatabaseLoaded(file.name, file.size);
+                } catch (err) {
+                    console.error("DBパースエラー:", err);
+                    showToast("error", "ファイル形式が正しくないか、SQLiteファイルが破損しています。");
+                } finally {
+                    showLoading(false);
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // データベース読み込み成功時の設定処理
+        function onDatabaseLoaded(filename, filesize) {
+            // ステータスバッジ表示
+            const badge = document.getElementById('db-status-badge');
+            const badgeName = document.getElementById('active-db-name');
+            badge.classList.remove('hidden');
+            badgeName.textContent = filename;
+
+            // フッター情報表示
+            document.getElementById('file-info-footer').classList.remove('hidden');
+            document.getElementById('info-filename').textContent = filename;
+            
+            const sizeStr = formatBytes(filesize);
+            document.getElementById('info-filesize').textContent = sizeStr;
+
+            // メタデータの抽出と設定
+            document.getElementById('info-meta-name').textContent = filename;
+            document.getElementById('info-meta-size').textContent = sizeStr;
+
+            // テーブル一覧の更新
+            loadTablesList();
+
+            // SQLエディタを有効化
+            document.getElementById('sql-textarea').removeAttribute('disabled');
+            document.getElementById('btn-run-sql').removeAttribute('disabled');
+
+            // PRAGMA情報等の取得
+            loadPragmaMetadata();
+            loadSchemaMetadataTable();
+        }
+
+        // テーブルリストを取得してサイドバーへ描画
+        function loadTablesList() {
+            if (!state.db) return;
+
+            try {
+                // sqlite_master からテーブル名一覧を取得 (システムテーブルは除外)
+                const query = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC;";
+                const result = state.db.exec(query);
+                
+                state.tables = [];
+                if (result.length > 0 && result[0].values) {
+                    state.tables = result[0].values.map(v => v[0]);
+                }
+
+                // 総テーブル数をUIに反映
+                document.getElementById('info-tables-count').textContent = `${state.tables.length} テーブル`;
+                document.getElementById('info-meta-tables').textContent = `${state.tables.length}`;
+
+                renderTableList(state.tables);
+            } catch (err) {
+                console.error("テーブルリスト取得エラー:", err);
+                showToast("error", "テーブル情報の取得に失敗しました");
+            }
+        }
+
+        // サイドバーにテーブルを描画
+        function renderTableList(tableNames) {
+            const container = document.getElementById('table-list-container');
+            container.innerHTML = '';
+
+            if (tableNames.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <p class="text-xs">テーブルが見つかりません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            tableNames.forEach(tableName => {
+                // 行数を事前に簡易取得
+                let rowCount = 0;
+                try {
+                    const cntResult = state.db.exec(`SELECT COUNT(*) FROM \`${tableName}\``);
+                    rowCount = cntResult[0].values[0][0];
+                } catch(e){}
+
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left px-3 py-2 rounded-lg flex items-center justify-between text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors group";
+                if (state.activeTable === tableName) {
+                    btn.classList.add('bg-brand-50', 'text-brand-500', 'dark:bg-brand-950/20');
+                } else {
+                    btn.classList.add('text-slate-600', 'dark:text-slate-300');
+                }
+
+                btn.innerHTML = `
+                    <div class="flex items-center space-x-2 truncate">
+                        <i data-lucide="table" class="w-4 h-4 text-slate-400 shrink-0 group-hover:text-brand-500 transition-colors"></i>
+                        <span class="truncate">${tableName}</span>
+                    </div>
+                    <span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-full shrink-0">${rowCount} 行</span>
+                `;
+
+                btn.addEventListener('click', () => selectAndLoadTable(tableName));
+                container.appendChild(btn);
+            });
+
+            initLucide();
+        }
+
+        // サイドバーのテーブル検索フィルタ
+        function filterTableList() {
+            const word = document.getElementById('table-search').value.toLowerCase();
+            const filtered = state.tables.filter(name => name.toLowerCase().includes(word));
+            renderTableList(filtered);
+        }
+
+        // 特定のテーブルデータを選択してロード
+        function selectAndLoadTable(tableName) {
+            state.activeTable = tableName;
+            state.currentPage = 1;
+            
+            // UI上のアクティブ表示を再レンダリング
+            filterTableList();
+
+            // ヘッダータイトルの書き換え
+            const titleSpan = document.getElementById('current-table-title');
+            titleSpan.innerHTML = `<span class="text-slate-800 dark:text-slate-100 font-bold">${tableName}</span>`;
+
+            // UIコントロールを有効化
+            document.getElementById('row-filter').removeAttribute('disabled');
+            document.getElementById('row-filter').value = '';
+            document.getElementById('clear-filter').classList.add('hidden');
+            document.getElementById('page-size-select').removeAttribute('disabled');
+            document.getElementById('btn-export-table').removeAttribute('disabled');
+
+            // データ展開
+            loadActiveTableData();
+        }
+
+        // 選択中テーブルからデータをロード
+        function loadActiveTableData() {
+            if (!state.db || !state.activeTable) return;
+
+            try {
+                // スキーマ(カラム情報)の取得
+                const pragmaQuery = `PRAGMA table_info(\`${state.activeTable}\`)`;
+                const pragmaResult = state.db.exec(pragmaQuery);
+                
+                state.tableColumns = [];
+                if (pragmaResult.length > 0) {
+                    // columns: cid, name, type, notnull, dflt_value, pk
+                    state.tableColumns = pragmaResult[0].values.map(val => ({
+                        name: val[1],
+                        type: val[2],
+                        pk: val[5] === 1
+                    }));
+                }
+
+                // 全データ取得 (件数が膨大になる可能性があるが、一旦JSメモリ上で管理・検索させる)
+                const dataQuery = `SELECT * FROM \`${state.activeTable}\``;
+                const dataResult = state.db.exec(dataQuery);
+
+                state.activeTableData = [];
+                if (dataResult.length > 0) {
+                    const columns = dataResult[0].columns;
+                    const values = dataResult[0].values;
+                    
+                    state.activeTableData = values.map(row => {
+                        const rowObj = {};
+                        columns.forEach((col, idx) => {
+                            rowObj[col] = row[idx];
+                        });
+                        return rowObj;
+                    });
+                }
+
+                state.filteredData = [...state.activeTableData];
+                
+                // テーブルとグリッドを再描画
+                renderActiveTableHeaders();
+                paginateAndRenderTable();
+            } catch (err) {
+                console.error("テーブルデータ取得エラー:", err);
+                showToast("error", "テーブルデータの展開に失敗しました");
+            }
+        }
+
+        // カラムヘッダー描画
+        function renderActiveTableHeaders() {
+            const headerRow = document.getElementById('table-headers');
+            headerRow.innerHTML = '';
+
+            // インデックス用カラム
+            const thIndex = document.createElement('th');
+            thIndex.className = "px-4 py-2.5 text-[10px] uppercase font-bold tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 w-12 text-center";
+            thIndex.textContent = "#";
+            headerRow.appendChild(thIndex);
+
+            state.tableColumns.forEach(col => {
+                const th = document.createElement('th');
+                th.className = "px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700";
+                
+                let pkBadge = col.pk ? `<span class="ml-1 px-1 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 text-[9px] rounded font-bold">PK</span>` : '';
+                let typeBadge = col.type ? `<span class="ml-1 text-[9px] text-slate-400 font-mono">(${col.type})</span>` : '';
+
+                th.innerHTML = `
+                    <div class="flex items-center space-x-1">
+                        <span class="font-mono text-xs">${col.name}</span>
+                        ${pkBadge}
+                        ${typeBadge}
+                    </div>
+                `;
+                headerRow.appendChild(th);
+            });
+        }
+
+        // テーブルボディへデータ描画（ページネーション適用）
+        function paginateAndRenderTable() {
+            const body = document.getElementById('table-body');
+            body.innerHTML = '';
+
+            const totalRows = state.filteredData.length;
+            const totalPages = Math.ceil(totalRows / state.pageSize) || 1;
+
+            if (state.currentPage > totalPages) {
+                state.currentPage = totalPages;
+            }
+
+            // インジケーターの更新
+            document.getElementById('page-indicator').textContent = `${state.currentPage} / ${totalPages} (${totalRows}件)`;
+            
+            // ページ切替ボタン活性状態
+            document.getElementById('btn-prev-page').disabled = state.currentPage === 1;
+            document.getElementById('btn-next-page').disabled = state.currentPage === totalPages;
+
+            if (totalRows === 0) {
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="${state.tableColumns.length + 1}" class="text-center py-20 text-slate-400">
+                            該当するデータが見つかりません。
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const startIndex = (state.currentPage - 1) * state.pageSize;
+            const endIndex = Math.min(startIndex + state.pageSize, totalRows);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const rowObj = state.filteredData[i];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors";
+
+                // 行番号
+                const tdIndex = document.createElement('td');
+                tdIndex.className = "px-4 py-2 text-[10px] text-center font-mono text-slate-400 border-b border-slate-100 dark:border-slate-800";
+                tdIndex.textContent = i + 1;
+                tr.appendChild(tdIndex);
+
+                // 各データセル
+                state.tableColumns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.className = "px-4 py-2 border-b border-slate-100 dark:border-slate-800 max-w-xs truncate font-mono text-xs";
+                    
+                    const value = rowObj[col.name];
+                    if (value === null) {
+                        td.innerHTML = `<span class="text-slate-400 dark:text-slate-600 italic">NULL</span>`;
+                    } else if (typeof value === 'object') {
+                        // バイナリ (BLOBなど) の場合は表現を変える
+                        td.innerHTML = `<span class="text-slate-400 dark:text-slate-500 italic">[BLOB ${value.length} bytes]</span>`;
+                    } else {
+                        td.textContent = String(value);
+                        // 長すぎるテキストはタイトルに入れてホバーで確認できるようにする
+                        if (String(value).length > 30) {
+                            td.title = String(value);
+                        }
+                    }
+                    tr.appendChild(td);
+                });
+
+                body.appendChild(tr);
+            }
+        }
+
+        // テーブルデータのインメモリ検索/フィルタ
+        function handleRowFilter() {
+            const val = document.getElementById('row-filter').value.toLowerCase();
+            const clearBtn = document.getElementById('clear-filter');
+
+            if (val.trim() === '') {
+                clearBtn.classList.add('hidden');
+                state.filteredData = [...state.activeTableData];
+            } else {
+                clearBtn.classList.remove('hidden');
+                state.filteredData = state.activeTableData.filter(row => {
+                    return Object.values(row).some(fieldVal => {
+                        if (fieldVal === null) return false;
+                        return String(fieldVal).toLowerCase().includes(val);
+                    });
+                });
+            }
+
+            state.currentPage = 1;
+            paginateAndRenderTable();
+        }
+
+        function clearRowFilter() {
+            document.getElementById('row-filter').value = '';
+            handleRowFilter();
+        }
+
+        // ページ移動
+        function changePage(direction) {
+            state.currentPage += direction;
+            paginateAndRenderTable();
+        }
+
+        // 1ページあたり件数の変更
+        function handlePageSizeChange(e) {
+            state.pageSize = parseInt(e.target.value, 10);
+            state.currentPage = 1;
+            paginateAndRenderTable();
+        }
+
+        // カスタムSQLクエリの実行
+        function executeCustomQuery() {
+            if (!state.db) {
+                showToast("error", "データベースが読み込まれていません");
+                return;
+            }
+
+            const sql = document.getElementById('sql-textarea').value.trim();
+            if (!sql) {
+                showToast("error", "クエリを入力してください");
+                return;
+            }
+
+            // エラー表示を非表示に
+            const errorBox = document.getElementById('sql-error-box');
+            errorBox.classList.add('hidden');
+
+            try {
+                const start = performance.now();
+                const res = state.db.exec(sql);
+                const end = performance.now();
+                const elapsed = (end - start).toFixed(2);
+
+                if (res.length === 0) {
+                    // SELECT以外のクエリ (CREATE, INSERT, UPDATE, DELETEなど) 
+                    renderEmptyQueryResult("クエリは正常に完了しましたが、返却データはありません。", elapsed);
+                    // テーブル構成が変わった可能性があるのでリスト更新
+                    loadTablesList();
+                    return;
+                }
+
+                // 実行結果をレンダリング
+                renderQueryResult(res[0], elapsed);
+                showToast("success", `クエリ実行成功 (${elapsed}ms)`);
+            } catch (err) {
+                console.error("SQL実行エラー:", err);
+                // エラー内容を表示
+                document.getElementById('sql-error-text').textContent = err.message;
+                errorBox.classList.remove('hidden');
+                showToast("error", "SQLエラーが発生しました");
+                
+                // 結果表示をクリア
+                clearQueryResultsTable();
+            }
+        }
+
+        // クエリが返すデータがない場合の表示
+        function renderEmptyQueryResult(message, elapsed) {
+            const headers = document.getElementById('query-headers');
+            const body = document.getElementById('query-body');
+            const actions = document.getElementById('query-result-actions');
+
+            headers.innerHTML = '';
+            actions.classList.add('hidden');
+
+            body.innerHTML = `
+                <tr>
+                    <td class="text-center py-20 text-emerald-600 dark:text-emerald-400">
+                        <i data-lucide="check-circle" class="w-12 h-12 mx-auto mb-2"></i>
+                        <p class="text-sm font-semibold">${message}</p>
+                        <p class="text-xs text-slate-400 mt-1">処理時間: ${elapsed} ms</p>
+                    </td>
+                </tr>
+            `;
+            initLucide();
+        }
+
+        // クエリ結果消去
+        function clearQueryResultsTable() {
+            const headers = document.getElementById('query-headers');
+            const body = document.getElementById('query-body');
+            const actions = document.getElementById('query-result-actions');
+            
+            headers.innerHTML = '';
+            actions.classList.add('hidden');
+            body.innerHTML = `
+                <tr>
+                    <td class="text-center py-20 text-slate-400">
+                        <i data-lucide="alert-circle" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                        <p class="text-sm">データが表示されませんでした。SQLを確認してください。</p>
+                    </td>
+                </tr>
+            `;
+            initLucide();
+        }
+
+        // クエリ結果のレンダリング
+        // cache用に一時保存するグローバル
+        let lastQueryData = { columns: [], values: [] };
+
+        function renderQueryResult(result, elapsed) {
+            lastQueryData = result; // キャッシュに保持
+
+            const headers = document.getElementById('query-headers');
+            const body = document.getElementById('query-body');
+            const actions = document.getElementById('query-result-actions');
+
+            headers.innerHTML = '';
+            body.innerHTML = '';
+
+            // カラムヘッダー生成
+            const columns = result.columns;
+            const values = result.values;
+
+            // 行番号ヘッダー
+            const thIdx = document.createElement('th');
+            thIdx.className = "px-4 py-2.5 text-[10px] uppercase font-bold tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 w-12 text-center";
+            thIdx.textContent = "#";
+            headers.appendChild(thIdx);
+
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.className = "px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 font-mono";
+                th.textContent = col;
+                headers.appendChild(th);
+            });
+
+            // 行データ生成 (大量データのブラウジングのために最大1000件程度でカット)
+            const maxDisplay = 1000;
+            const displayLimit = Math.min(values.length, maxDisplay);
+
+            for (let i = 0; i < displayLimit; i++) {
+                const row = values[i];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors";
+
+                // 行番号
+                const tdIdx = document.createElement('td');
+                tdIdx.className = "px-4 py-1.5 text-[10px] text-center font-mono text-slate-400 border-b border-slate-150 dark:border-slate-800";
+                tdIdx.textContent = i + 1;
+                tr.appendChild(tdIdx);
+
+                row.forEach(val => {
+                    const td = document.createElement('td');
+                    td.className = "px-4 py-1.5 border-b border-slate-150 dark:border-slate-800 max-w-xs truncate font-mono text-xs";
+                    
+                    if (val === null) {
+                        td.innerHTML = `<span class="text-slate-400 italic">NULL</span>`;
+                    } else if (typeof val === 'object') {
+                        td.innerHTML = `<span class="text-slate-400 italic">[BLOB ${val.length} bytes]</span>`;
+                    } else {
+                        td.textContent = String(val);
+                        if (String(val).length > 30) td.title = String(val);
+                    }
+                    tr.appendChild(td);
+                });
+                body.appendChild(tr);
+            }
+
+            if (values.length > maxDisplay) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.setAttribute('colspan', columns.length + 1);
+                td.className = "text-center py-4 text-slate-500 italic text-xs";
+                td.textContent = `表示は先頭 ${maxDisplay} 件のみに制限されています (全 ${values.length} 件中)`;
+                tr.appendChild(td);
+                body.appendChild(tr);
+            }
+
+            // アクションバーの表示
+            actions.classList.remove('hidden');
+            document.getElementById('query-rows-count').textContent = `全 ${values.length} 件 (${elapsed} ms)`;
+        }
+
+        // エディタへSQLスニペット挿入
+        function insertQuerySnippet(snippet) {
+            const textarea = document.getElementById('sql-textarea');
+            const pos = textarea.selectionStart;
+            const text = textarea.value;
+            
+            let inserted = snippet;
+            if (snippet === 'SELECT * FROM ' || snippet === 'SELECT COUNT(*) FROM ') {
+                if (state.activeTable) {
+                    inserted = `${snippet}\`${state.activeTable}\` LIMIT 100;`;
+                } else if (state.tables.length > 0) {
+                    inserted = `${snippet}\`${state.tables[0]}\` LIMIT 100;`;
+                }
+            }
+
+            textarea.value = text.substring(0, pos) + inserted + text.substring(textarea.selectionEnd);
+            textarea.focus();
+            // カーソル位置を適切な位置に移動
+            const newPos = pos + inserted.length;
+            textarea.setSelectionRange(newPos, newPos);
+        }
+
+        // PRAGMA情報の読み込み (メタデータパネル)
+        function loadPragmaMetadata() {
+            if (!state.db) return;
+
+            const pragmas = [
+                { name: 'journal_mode', label: 'Journal Mode', desc: 'トランザクションログの管理方法。' },
+                { name: 'auto_vacuum', label: 'Auto Vacuum', desc: '削除データ容量の再利用設定。' },
+                { name: 'cache_size', label: 'Cache Size', desc: 'インメモリカッシュのページサイズ制限。' },
+                { name: 'encoding', label: 'Encoding', desc: 'データベーステキスト文字コード。' },
+                { name: 'foreign_keys', label: 'Foreign Keys', desc: '外部キー制約の有効化ステータス。' },
+                { name: 'page_size', label: 'Page Size', desc: 'データベースページのバイト単位サイズ。' },
+                { name: 'synchronous', label: 'Synchronous', desc: 'ディスク書き込みの同期強度。' }
+            ];
+
+            const tbody = document.getElementById('pragma-table-body');
+            tbody.innerHTML = '';
+
+            pragmas.forEach(p => {
+                let value = 'unknown';
+                try {
+                    const res = state.db.exec(`PRAGMA ${p.name}`);
+                    if (res.length > 0 && res[0].values) {
+                        value = res[0].values[0][0];
+                    }
+                } catch(e) {}
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-2.5 font-bold text-slate-700 dark:text-slate-300">${p.label} <code class="text-[10px] text-slate-400 font-mono font-normal">(${p.name})</code></td>
+                    <td class="py-2.5 font-mono font-semibold text-brand-500">${value}</td>
+                    <td class="py-2.5 text-slate-500">${p.desc}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // sqlite_master スキーマ一覧表示
+        function loadSchemaMetadataTable() {
+            if (!state.db) return;
+
+            const tbody = document.getElementById('schema-meta-body');
+            tbody.innerHTML = '';
+
+            try {
+                const res = state.db.exec("SELECT type, name, tbl_name, sql FROM sqlite_master ORDER BY type, name");
+                if (res.length > 0 && res[0].values) {
+                    res[0].values.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors";
+                        
+                        const type = row[0] || '';
+                        const name = row[1] || '';
+                        const tbl_name = row[2] || '';
+                        const sql = row[3] || '';
+
+                        tr.innerHTML = `
+                            <td class="py-2.5 px-1 font-semibold text-emerald-600 dark:text-emerald-400">${type}</td>
+                            <td class="py-2.5 px-1 font-bold">${name}</td>
+                            <td class="py-2.5 px-1 text-slate-500">${tbl_name}</td>
+                            <td class="py-2.5 px-1 max-w-md truncate cursor-pointer hover:text-brand-500 text-[11px]" title="${sql.replace(/"/g, '&quot;')}">${sql ? sql : '<span class="text-slate-400 italic">N/A (自動生成インデックス等)</span>'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">スキーマ情報が見つかりません。</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Schema metadata load failed", err);
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-rose-500">スキーマ読み込み失敗: ${err.message}</td></tr>`;
+            }
+        }
+
+        // インメモリーのサンプル用データベース構築
+        function loadSampleDatabase() {
+            if (!state.SQL) {
+                showToast("error", "SQLiteエンジンがロードされていません");
+                return;
+            }
+
+            showLoading(true, "サンプルデータベースを作成中...");
+
+            setTimeout(() => {
+                try {
+                    if (state.db) state.db.close();
+                    
+                    state.db = new state.SQL.Database();
+
+                    // テーブル作成クエリ群
+                    const sql = `
+                        -- ユーザーテーブル
+                        CREATE TABLE users (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name TEXT NOT NULL,
+                            email TEXT UNIQUE,
+                            role TEXT DEFAULT 'User',
+                            status TEXT DEFAULT 'Active',
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        );
+
+                        -- サンプルデータ挿入 (ユーザー)
+                        INSERT INTO users (name, email, role, status, created_at) VALUES 
+                        ('佐藤 健二', 'sato@example.com', 'Admin', 'Active', '2026-01-10 10:00:00'),
+                        ('鈴木 実', 'suzuki@example.com', 'User', 'Active', '2026-02-15 11:30:00'),
+                        ('高橋 瞳', 'takahashi@example.com', 'User', 'Inactive', '2026-03-01 15:45:00'),
+                        ('田中 太郎', 'tanaka@example.com', 'User', 'Active', '2026-04-12 09:15:00'),
+                        ('渡辺 香織', 'watanabe@example.com', 'Manager', 'Active', '2026-05-20 18:00:00'),
+                        ('伊藤 翼', 'ito@example.com', 'User', 'Active', '2026-06-05 14:22:00'),
+                        ('山本 結衣', 'yamamoto@example.com', 'User', 'Active', '2026-06-30 16:40:00');
+
+                        -- 商品テーブル
+                        CREATE TABLE products (
+                            product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            product_name TEXT NOT NULL,
+                            category TEXT,
+                            price REAL,
+                            stock_quantity INTEGER
+                        );
+
+                        -- サンプルデータ挿入 (商品)
+                        INSERT INTO products (product_name, category, price, stock_quantity) VALUES
+                        ('ワイヤレスマウス', '周辺機器', 3200.00, 120),
+                        ('メカニカルキーボード', '周辺機器', 12800.00, 45),
+                        ('4K モニター 27インチ', 'ディスプレイ', 45000.00, 15),
+                        ('ノイズキャンセリングヘッドホン', 'オーディオ', 24000.00, 30),
+                        ('USB-C ハブ 7-in-1', '周辺機器', 4800.00, 200),
+                        ('スマートウォッチ Pro', 'ウェアラブル', 35000.00, 8),
+                        ('ポータブルSSD 1TB', 'ストレージ', 14500.00, 85);
+
+                        -- 注文履歴テーブル
+                        CREATE TABLE orders (
+                            order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER,
+                            product_id INTEGER,
+                            quantity INTEGER,
+                            order_date DATE,
+                            FOREIGN KEY(user_id) REFERENCES users(id),
+                            FOREIGN KEY(product_id) REFERENCES products(product_id)
+                        );
+
+                        -- サンプルデータ挿入 (注文)
+                        INSERT INTO orders (user_id, product_id, quantity, order_date) VALUES
+                        (2, 1, 1, '2026-06-01'),
+                        (4, 5, 2, '2026-06-02'),
+                        (1, 3, 1, '2026-06-15'),
+                        (5, 4, 1, '2026-06-20'),
+                        (6, 1, 1, '2026-06-25'),
+                        (2, 7, 1, '2026-06-28'),
+                        (4, 2, 1, '2026-07-02'),
+                        (2, 5, 1, '2026-07-05');
+                    `;
+
+                    state.db.run(sql);
+                    
+                    showToast("success", "テスト用のサンプルデータベースを構築しました");
+                    onDatabaseLoaded("SampleInmemory.db", 45000); // 概算
+                } catch (err) {
+                    console.error("サンプルDB作成失敗:", err);
+                    showToast("error", "サンプルデータの読み込みに失敗しました");
+                } finally {
+                    showLoading(false);
+                }
+            }, 300);
+        }
+
+        // CSV・JSONエクスポート補助処理群
+        function exportActiveTableToCSV() {
+            if (!state.activeTable || state.filteredData.length === 0) return;
+
+            const columns = state.tableColumns.map(c => c.name);
+            let csvContent = "\uFEFF"; // BOMを追加してExcelの文字化けを防止
+            
+            // ヘッダー行
+            csvContent += columns.map(c => `"${c.replace(/"/g, '""')}"`).join(",") + "\n";
+            
+            // データ行
+            state.filteredData.forEach(row => {
+                const line = columns.map(col => {
+                    const value = row[col];
+                    if (value === null) return '""';
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                });
+                csvContent += line.join(",") + "\n";
+            });
+
+            downloadBlob(csvContent, `${state.activeTable}_export.csv`, "text/csv;charset=utf-8;");
+            showToast("success", `${state.activeTable} をCSV形式で出力しました`);
+        }
+
+        function exportQueryResultsToCSV() {
+            if (!lastQueryData.columns || lastQueryData.columns.length === 0) return;
+
+            const columns = lastQueryData.columns;
+            const values = lastQueryData.values;
+            let csvContent = "\uFEFF"; 
+
+            // ヘッダー行
+            csvContent += columns.map(c => `"${c.replace(/"/g, '""')}"`).join(",") + "\n";
+
+            // データ行
+            values.forEach(row => {
+                const line = row.map(val => {
+                    if (val === null) return '""';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                });
+                csvContent += line.join(",") + "\n";
+            });
+
+            downloadBlob(csvContent, `query_results.csv`, "text/csv;charset=utf-8;");
+            showToast("success", "クエリ結果をCSV出力しました");
+        }
+
+        function copyQueryResultsToJSON() {
+            if (!lastQueryData.columns || lastQueryData.columns.length === 0) return;
+
+            const columns = lastQueryData.columns;
+            const values = lastQueryData.values;
+
+            // オブジェクト配列に変換
+            const jsonArray = values.map(row => {
+                const obj = {};
+                columns.forEach((col, idx) => {
+                    obj[col] = row[idx];
+                });
+                return obj;
+            });
+
+            const jsonStr = JSON.stringify(jsonArray, null, 2);
+
+            // クリップボードへコピー
+            try {
+                const textarea = document.createElement("textarea");
+                textarea.value = jsonStr;
+                textarea.style.position = "fixed"; // 画面外に逃がす
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                showToast("success", "JSONをクリップボードにコピーしました");
+            } catch (err) {
+                console.error("コピー失敗:", err);
+                showToast("error", "クリップボードへの書き込みに失敗しました");
+            }
+        }
+
+        function downloadBlob(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // バイト数フォーマッター
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // 簡易通知トーストシステム
+        function showToast(type, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "flex items-center space-x-2 px-4 py-3 rounded-lg shadow-lg text-sm font-semibold pointer-events-auto transition-all duration-300 translate-y-2 opacity-0";
+            
+            if (type === 'success') {
+                toast.classList.add('bg-emerald-500', 'text-white');
+                toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>${message}</span>`;
+            } else if (type === 'error') {
+                toast.classList.add('bg-rose-500', 'text-white');
+                toast.innerHTML = `<i data-lucide="x-circle" class="w-4 h-4"></i><span>${message}</span>`;
+            } else {
+                toast.classList.add('bg-slate-700', 'text-white');
+                toast.innerHTML = `<i data-lucide="info" class="w-4 h-4"></i><span>${message}</span>`;
+            }
+
+            container.appendChild(toast);
+            initLucide();
+
+            // フェードインアニメーション
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // 自動消去設定
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
