@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Mobile URL</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 selection:bg-sky-500/30">
+
+  <!-- メインコンテンツ -->
+  <main class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 space-y-6">
+
+    <!-- ヘッダー -->
+    <div class="text-center space-y-1">
+      <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white">
+        X Mobile URL
+      </h1>
+      <p class="text-xs md:text-sm text-slate-400">
+        XのURLをmobile.x.com に置換
+      </p>
+    </div>
+
+    <!-- 入力フォーム -->
+    <div class="space-y-3">
+      <div>
+        <label for="url-input" class="block text-xs font-medium text-slate-400 mb-1.5">
+          変換前のURL
+        </label>
+        <input 
+          type="text" 
+          id="url-input" 
+          placeholder="https://x.com/username/status/..." 
+          class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-sky-500 text-slate-100 placeholder-slate-600 transition-colors text-sm"
+        />
+      </div>
+
+      <button 
+        id="convert-btn"
+        class="w-full py-2.5 bg-sky-600 hover:bg-sky-500 active:scale-[0.99] transition-all rounded-lg font-medium text-white flex items-center justify-center gap-2 text-sm"
+      >
+        <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
+        変換する
+      </button>
+    </div>
+
+    <!-- 変換結果表示エリア（デフォルト非表示） -->
+    <div id="result-container" class="hidden space-y-2 pt-5 border-t border-slate-800">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-slate-400">変換後のURL</span>
+        <span class="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md">
+          完了
+        </span>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-2">
+        <!-- 結果テキストボックス -->
+        <div class="flex-grow relative">
+          <input 
+            type="text" 
+            id="result-output" 
+            readonly 
+            class="w-full pl-3 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sky-400 font-mono text-xs focus:outline-none cursor-default"
+          />
+          <button 
+            id="output-copy-icon-btn" 
+            title="コピー"
+            class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-500 hover:text-sky-400 transition-colors"
+          >
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- アクションボタン群 -->
+        <div class="flex gap-2">
+          <button 
+            id="copy-btn"
+            class="flex-1 sm:flex-none px-4 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 transition-colors rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-700/50"
+          >
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            コピー
+          </button>
+          <a 
+            id="open-btn"
+            href="#" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="flex-1 sm:flex-none px-4 py-2 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 active:scale-95 transition-colors rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 border border-sky-500/20"
+          >
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            開く
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- エラー・メッセージ表示領域 -->
+    <div id="error-message" class="hidden p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs flex items-center gap-2">
+      <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+      <span id="error-text">有効な URL を入力してください。</span>
+    </div>
+
+    <!-- コピー完了トースト（カスタム通知） -->
+    <div id="toast" class="opacity-0 translate-y-2 pointer-events-none fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 border border-slate-700 text-slate-100 text-xs px-3.5 py-2 rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 z-50">
+      <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+      <span>コピーしました！</span>
+    </div>
+  </main>
+
+  <!-- スクリプト -->
+  <script>
+    // Lucideアイコンの初期化
+    lucide.createIcons();
+
+    // DOM要素の取得
+    const urlInput = document.getElementById('url-input');
+    const convertBtn = document.getElementById('convert-btn');
+    const resultContainer = document.getElementById('result-container');
+    const resultOutput = document.getElementById('result-output');
+    const copyBtn = document.getElementById('copy-btn');
+    const outputCopyIconBtn = document.getElementById('output-copy-icon-btn');
+    const openBtn = document.getElementById('open-btn');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    const toast = document.getElementById('toast');
+
+    // URLを置換する関数
+    function convertUrl(input) {
+      let trimmed = input.trim();
+      if (!trimmed) return null;
+
+      let hasProtocol = /^https?:\/\//i.test(trimmed);
+      let testUrl = hasProtocol ? trimmed : 'https://' + trimmed;
+
+      try {
+        const urlObj = new URL(testUrl);
+        const host = urlObj.hostname.toLowerCase();
+
+        const isXOrTwitter = host === 'x.com' || 
+                             host === 'twitter.com' || 
+                             host === 'mobile.twitter.com' || 
+                             host === 'mobile.x.com' ||
+                             host.endsWith('.x.com') || 
+                             host.endsWith('.twitter.com');
+
+        if (!isXOrTwitter) {
+          return { error: 'X (Twitter) のドメイン名が見つかりません。' };
+        }
+
+        urlObj.hostname = 'mobile.x.com';
+        return {
+          converted: urlObj.toString()
+        };
+      } catch (e) {
+        const regex = /^(https?:\/\/)?(?:www\.)?(?:mobile\.)?(twitter\.com|x\.com)(\/.*)?$/i;
+        const match = trimmed.match(regex);
+        if (match) {
+          const path = match[3] || '';
+          return {
+            converted: `https://mobile.x.com${path}`
+          };
+        }
+        return { error: 'URLの形式が正しくありません。' };
+      }
+    }
+
+    // トースト通知を表示
+    let toastTimeout;
+    function showToast() {
+      clearTimeout(toastTimeout);
+      toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+      }, 2000);
+    }
+
+    // クリップボードにコピー
+    function copyToClipboard(text) {
+      const text_area = document.createElement('textarea');
+      text_area.value = text;
+      text_area.style.position = 'fixed';
+      text_area.style.opacity = '0';
+      document.body.appendChild(text_area);
+      text_area.select();
+      try {
+        document.execCommand('copy');
+        showToast();
+      } catch (err) {
+        console.error('コピーに失敗しました', err);
+      }
+      document.body.removeChild(text_area);
+    }
+
+    // エラー表示をクリア
+    function clearError() {
+      errorMessage.classList.add('hidden');
+    }
+
+    // エラーを表示
+    function showError(message) {
+      errorText.textContent = message;
+      errorMessage.classList.remove('hidden');
+      resultContainer.classList.add('hidden');
+    }
+
+    // 変換処理の実行
+    function handleConversion() {
+      clearError();
+      const inputVal = urlInput.value;
+
+      if (!inputVal.trim()) {
+        showError('URLを入力してください。');
+        return;
+      }
+
+      const result = convertUrl(inputVal);
+
+      if (!result) {
+        showError('有効なURLを入力してください。');
+        return;
+      }
+
+      if (result.error) {
+        showError(result.error);
+        return;
+      }
+
+      resultOutput.value = result.converted;
+      openBtn.href = result.converted;
+      resultContainer.classList.remove('hidden');
+    }
+
+    // イベントリスナーの登録
+    convertBtn.addEventListener('click', handleConversion);
+
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        handleConversion();
+      }
+    });
+
+    copyBtn.addEventListener('click', () => {
+      copyToClipboard(resultOutput.value);
+    });
+
+    outputCopyIconBtn.addEventListener('click', () => {
+      copyToClipboard(resultOutput.value);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      urlInput.focus();
+    });
+  </script>
+</body>
+</html>
