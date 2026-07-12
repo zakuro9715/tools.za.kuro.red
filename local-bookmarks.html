@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Bookmarks</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#1e293b',
+              950: '#0b0f19'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- CSS Custom Reset & Transitions -->
+  <style>
+    /* スクロールバーの非表示（モバイルグループタブ用） */
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* ドラッグ時のトランジション制限 */
+    .dragging {
+      opacity: 0.5;
+    }
+  </style>
+
+  <!-- 初期ダークモード判定（ちらつき防止のためhead内で実行） -->
+  <script>
+    (function() {
+      const savedDarkMode = localStorage.getItem('local_bookmarks_dark_mode');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = savedDarkMode === 'true' || (savedDarkMode === null && prefersDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+</head>
+<body class="transition-colors duration-200 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
+  <div id="app"></div>
+
+  <!-- JavaScript アプリケーションロジック -->
+  <script>
+    // 初回起動時のデフォルトグループ
+    const DEFAULT_GROUPS = [
+      { id: 'all', name: 'すべてのブックマーク', isSystem: true },
+      { id: 'unassigned', name: '未分類', isSystem: true },
+      { id: 'group-1', name: '仕事・ツール', isSystem: false },
+      { id: 'group-2', name: 'エンタメ・SNS', isSystem: false },
+    ];
+
+    const EMPTY_START_GROUPS = [
+      { id: 'all', name: 'すべてのブックマーク', isSystem: true },
+      { id: 'unassigned', name: '未分類', isSystem: true },
+    ];
+
+    const INITIAL_BOOKMARKS = [
+      {
+        id: 'sample-1',
+        title: 'Google',
+        url: 'https://www.google.com',
+        groupId: 'group-1'
+      },
+      {
+        id: 'sample-2',
+        title: 'GitHub',
+        url: 'https://github.com',
+        groupId: 'group-1'
+      },
+      {
+        id: 'sample-3',
+        title: 'YouTube',
+        url: 'https://www.youtube.com',
+        groupId: 'group-2'
+      }
+    ];
+
+    // アプリケーション状態 (State)
+    let state = {
+      bookmarks: [],
+      groups: [],
+      activeGroupId: 'all',
+      searchQuery: '',
+      darkMode: false,
+      showWelcome: false,
+      isInitialized: false,
+
+      // グループ追加・編集用
+      newGroupName: '',
+      editingGroupId: null,
+      editingGroupName: '',
+
+      // ブックマーク編集用
+      editingBookmarkId: null,
+      editingBookmarkTitle: '',
+      editingBookmarkUrl: '',
+      editingBookmarkGroupId: '',
+
+      // ドラッグ&ドロップ状態
+      draggedBookmarkId: null,
+      draggedGroupId: null,
+      draggedIndex: null,
+      draggedGroupIndex: null,
+      dragOverIndex: null,
+      dragOverGroupIndex: null,
+      dragOverGroupId: null,
+
+      // インポート用
+      showImportModal: false,
+      importData: null,
+      importError: ''
+    };
+
+    // 初期起動時のマウント処理
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initAppState();
+      render();
+      initGlobalEventListeners();
+    });
+
+    // テーマ設定の初期化 (システム追従機能含む)
+    function initTheme() {
+      const savedDarkMode = localStorage.getItem('local_bookmarks_dark_mode');
+      if (savedDarkMode === 'true') {
+        state.darkMode = true;
+      } else if (savedDarkMode === 'false') {
+        state.darkMode = false;
+      } else {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        state.darkMode = mediaQuery.matches;
+
+        // OSのダークモード設定が変更された際に自動追従
+        mediaQuery.addEventListener('change', (e) => {
+          if (localStorage.getItem('local_bookmarks_dark_mode') === null) {
+            state.darkMode = e.matches;
+            applyTheme();
+          }
+        });
+      }
+      applyTheme();
+    }
+
+    // テーマの適用
+    function applyTheme() {
+      if (state.darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    // ダークモードのトグル切り替え
+    function toggleDarkMode() {
+      state.darkMode = !state.darkMode;
+      applyTheme();
+      localStorage.setItem('local_bookmarks_dark_mode', state.darkMode.toString());
+      render();
+    }
+
+    // アプリケーションデータのロード
+    function initAppState() {
+      const setupCompleted = localStorage.getItem('local_bookmarks_setup_completed');
+      
+      if (!setupCompleted) {
+        state.showWelcome = true;
+        state.isInitialized = true;
+      } else {
+        const savedGroups = localStorage.getItem('local_bookmarks_groups');
+        if (savedGroups) {
+          try {
+            state.groups = JSON.parse(savedGroups);
+          } catch (e) {
+            state.groups = DEFAULT_GROUPS;
+          }
+        } else {
+          state.groups = DEFAULT_GROUPS;
+        }
+
+        const savedBookmarks = localStorage.getItem('local_bookmarks_app_v2');
+        if (savedBookmarks) {
+          try {
+            state.bookmarks = JSON.parse(savedBookmarks);
+          } catch (e) {
+            state.bookmarks = INITIAL_BOOKMARKS;
+          }
+        } else {
+          state.bookmarks = [];
+        }
+        state.isInitialized = true;
+      }
+    }
+
+    // データのLocalStorage保存
+    function saveState() {
+      if (state.isInitialized && !state.showWelcome) {
+        localStorage.setItem('local_bookmarks_app_v2', JSON.stringify(state.bookmarks));
+        localStorage.setItem('local_bookmarks_groups', JSON.stringify(state.groups));
+      }
+    }
+
+    // --- 初期セットアップのアクション ---
+    function handleStartWithSamples() {
+      state.groups = JSON.parse(JSON.stringify(DEFAULT_GROUPS));
+      state.bookmarks = JSON.parse(JSON.stringify(INITIAL_BOOKMARKS));
+      localStorage.setItem('local_bookmarks_setup_completed', 'true');
+      state.showWelcome = false;
+      saveState();
+      render();
+    }
+
+    // 完全に空の状態から開始
+    function handleStartWithEmpty() {
+      state.groups = JSON.parse(JSON.stringify(EMPTY_START_GROUPS));
+      state.bookmarks = [];
+      localStorage.setItem('local_bookmarks_setup_completed', 'true');
+      state.showWelcome = false;
+      saveState();
+      render();
+    }
+
+    // --- インポート/エクスポートのアクション ---
+    function handleExportData() {
+      try {
+        const dataStr = JSON.stringify({
+          appIdentifier: 'smart_bookmark_backup_file',
+          version: '2.5',
+          groups: state.groups,
+          bookmarks: state.bookmarks
+        }, null, 2);
+
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const tempLink = document.createElement('a');
+        tempLink.href = url;
+        tempLink.download = `bookmarks_backup_${dateStr}.json`;
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Export failed:', err);
+      }
+    }
+
+    function triggerFileInput() {
+      document.getElementById('hidden-file-input').click();
+    }
+
+    function handleFileChange(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      state.importError = '';
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsedData = JSON.parse(event.target.result);
+          if (
+            parsedData && 
+            (parsedData.appIdentifier === 'smart_bookmark_backup_file' || 
+            (Array.isArray(parsedData.groups) && Array.isArray(parsedData.bookmarks)))
+          ) {
+            state.importData = parsedData;
+            state.showImportModal = true;
+            render();
+          } else {
+            state.importError = '形式が正しくありません。ブックマーク用のJSONファイルを選択してください。';
+            render();
+          }
+        } catch (err) {
+          state.importError = 'ファイルの解析に失敗しました。正しいJSONファイルであることをご確認ください。';
+          render();
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = ''; 
+    }
+
+    function handleImportOverwrite() {
+      if (!state.importData) return;
+      state.groups = state.importData.groups || EMPTY_START_GROUPS;
+      state.bookmarks = state.importData.bookmarks || [];
+      localStorage.setItem('local_bookmarks_setup_completed', 'true');
+      state.activeGroupId = 'all';
+      state.showWelcome = false;
+      state.showImportModal = false;
+      state.importData = null;
+      saveState();
+      render();
+    }
+
+    function handleImportMerge() {
+      if (!state.importData) return;
+      const incomingGroups = state.importData.groups || [];
+      const incomingBookmarks = state.importData.bookmarks || [];
+
+      const currentCustomGroups = state.groups.filter(g => !g.isSystem);
+      const incomingCustomGroups = incomingGroups.filter(g => !g.isSystem);
+
+      const existingGroupIds = new Set(state.groups.map(g => g.id));
+      const newUniqueGroups = incomingCustomGroups.filter(g => !existingGroupIds.has(g.id));
+
+      state.groups = [...state.groups, ...newUniqueGroups];
+
+      const existingBookmarkIds = new Set(state.bookmarks.map(b => b.id));
+      const newUniqueBookmarks = incomingBookmarks
+        .filter(b => !existingBookmarkIds.has(b.id));
+
+      const validGroupIds = new Set(state.groups.map(g => g.id));
+      const sanitizedBookmarks = newUniqueBookmarks.map(b => {
+        if (!validGroupIds.has(b.groupId)) {
+          return { ...b, groupId: 'unassigned' };
+        }
+        return b;
+      });
+
+      state.bookmarks = [...sanitizedBookmarks, ...state.bookmarks];
+      state.showImportModal = false;
+      state.importData = null;
+      saveState();
+      render();
+    }
+
+    // --- グループ操作関連 ---
+    function handleAddGroupSidebar(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('sidebar-new-group-input');
+      const val = input ? input.value.trim() : '';
+      if (!val) return;
+      const newId = 'group-' + Date.now();
+      state.groups.push({
+        id: newId,
+        name: val,
+        isSystem: false
+      });
+      state.activeGroupId = newId;
+      saveState();
+      render();
+    }
+
+    function handleAddNewGroupDirect() {
+      const newId = 'group-' + Date.now();
+      state.groups.push({
+        id: newId,
+        name: '',
+        isSystem: false
+      });
+      state.editingGroupId = newId;
+      state.editingGroupName = '';
+      state.activeGroupId = 'all'; 
+      saveState();
+      render();
+    }
+
+    function startEditGroup(id, currentName) {
+      state.editingGroupId = id;
+      state.editingGroupName = currentName;
+      render();
+    }
+
+    function saveGroupName(id) {
+      const input = document.getElementById('active-edit-group-name');
+      const updatedName = input ? input.value.trim() : '';
+      const finalName = updatedName || '新規グループ';
+      state.groups = state.groups.map(g => 
+        g.id === id ? { ...g, name: finalName } : g
+      );
+      state.editingGroupId = null;
+      saveState();
+      render();
+    }
+
+    function cancelGroupEdit() {
+      // もし名前が空のまま作成した未確定グループなら削除する
+      const g = state.groups.find(x => x.id === state.editingGroupId);
+      if (g && g.name === '') {
+        state.groups = state.groups.filter(x => x.id !== state.editingGroupId);
+      }
+      state.editingGroupId = null;
+      render();
+    }
+
+    function deleteGroup(id) {
+      state.bookmarks = state.bookmarks.map(b => 
+        b.groupId === id ? { ...b, groupId: 'unassigned' } : b
+      );
+      state.groups = state.groups.filter(g => g.id !== id);
+      if (state.activeGroupId === id) {
+        state.activeGroupId = 'all';
+      }
+      saveState();
+      render();
+    }
+
+    // --- ブックマーク操作関連 ---
+    function addBookmark(targetGroupId = null) {
+      const newId = Date.now().toString();
+      const initialGroupId = targetGroupId || ((state.activeGroupId === 'all') ? 'unassigned' : state.activeGroupId);
+
+      const newBookmark = {
+        id: newId,
+        title: '',
+        url: '',
+        groupId: initialGroupId
+      };
+      
+      state.bookmarks.unshift(newBookmark);
+      state.editingBookmarkId = newId;
+      state.editingBookmarkTitle = '';
+      state.editingBookmarkUrl = '';
+      state.editingBookmarkGroupId = initialGroupId;
+      render();
+    }
+
+    function startEditBookmark(id, title, url, groupId) {
+      state.editingBookmarkId = id;
+      state.editingBookmarkTitle = title;
+      state.editingBookmarkUrl = url;
+      state.editingBookmarkGroupId = Math.floor(groupId) || groupId; // グループIDの型チェック
+      render();
+    }
+
+    function saveBookmarkEdit(id) {
+      const titleInput = document.getElementById('active-edit-title');
+      const urlInput = document.getElementById('active-edit-url');
+      const desktopGroupSelect = document.getElementById('active-edit-group-select');
+      const mobileGroupSelect = document.getElementById('active-edit-group-select-mobile');
+      
+      let finalUrl = urlInput ? urlInput.value.trim() : '';
+      if (finalUrl && !/^https?:\/\//i.test(finalUrl)) {
+        finalUrl = `https://${finalUrl}`;
+      }
+      const finalTitle = titleInput ? titleInput.value.trim() : '無題のブックマーク';
+
+      // モバイルまたはデスクトップのグループ選択を取得
+      let selectedGroupId = state.editingBookmarkGroupId;
+      if (desktopGroupSelect && desktopGroupSelect.value) {
+        selectedGroupId = desktopGroupSelect.value;
+      } else if (mobileGroupSelect && mobileGroupSelect.value) {
+        selectedGroupId = mobileGroupSelect.value;
+      }
+
+      state.bookmarks = state.bookmarks.map(b => {
+        if (b.id === id) {
+          return {
+            ...b,
+            title: finalTitle,
+            url: finalUrl,
+            groupId: selectedGroupId || b.groupId
+          };
+        }
+        return b;
+      });
+
+      state.editingBookmarkId = null;
+      saveState();
+      render();
+    }
+
+    function cancelBookmarkEdit(id) {
+      const bm = state.bookmarks.find(b => b.id === id);
+      // 新規作成時（タイトルもURLも空）にキャンセルした場合はエントリーを削除
+      if (bm && !bm.title && !bm.url) {
+        state.bookmarks = state.bookmarks.filter(b => b.id !== id);
+      }
+      state.editingBookmarkId = null;
+      render();
+    }
+
+    function deleteBookmark(id) {
+      state.bookmarks = state.bookmarks.filter(b => b.id !== id);
+      saveState();
+      render();
+    }
+
+    // --- フィルタリングヘルパー ---
+    function getFilteredBookmarksForGroup(groupId) {
+      return state.bookmarks.filter(b => {
+        if (groupId === 'all') return true;
+        return b.groupId === groupId;
+      }).filter(b => {
+        const query = state.searchQuery.toLowerCase();
+        return (
+          b.title.toLowerCase().includes(query) ||
+          b.url.toLowerCase().includes(query)
+        );
+      });
+    }
+
+    // --- 検索変更時 ---
+    function handleSearchInput(e) {
+      state.searchQuery = e.target.value;
+      renderBookmarksOnly();
+    }
+
+    function setActiveGroup(id) {
+      state.activeGroupId = id;
+      render();
+    }
+
+    // --- ドラッグ&ドロップイベントハンドラー ---
+    function initGlobalEventListeners() {
+      const app = document.getElementById('app');
+
+      // ドラッグ開始
+      app.addEventListener('dragstart', (e) => {
+        const bookmarkEl = e.target.closest('[data-drag-type="bookmark"]');
+        const groupEl = e.target.closest('[data-drag-type="group"]');
+        const groupPanelEl = e.target.closest('[data-drag-type="group-panel"]');
+
+        if (bookmarkEl) {
+          state.draggedBookmarkId = bookmarkEl.getAttribute('data-id');
+          state.draggedIndex = parseInt(bookmarkEl.getAttribute('data-index'), 10);
+          e.dataTransfer.setData('text/plain', state.draggedBookmarkId);
+          bookmarkEl.classList.add('opacity-30');
+        } else if (groupEl) {
+          state.draggedGroupId = groupEl.getAttribute('data-group-id');
+          state.draggedGroupIndex = parseInt(groupEl.getAttribute('data-group-index'), 10);
+          e.dataTransfer.setData('text/group-id', state.draggedGroupId);
+          groupEl.classList.add('opacity-40');
+        } else if (groupPanelEl) {
+          state.draggedGroupId = groupPanelEl.getAttribute('data-group-id');
+          state.draggedGroupIndex = parseInt(groupPanelEl.getAttribute('data-group-index'), 10);
+          e.dataTransfer.setData('text/group-id', state.draggedGroupId);
+          groupPanelEl.classList.add('opacity-40');
+        }
+      });
+
+      // ドラッグ中移動許可
+      app.addEventListener('dragover', (e) => {
+        e.preventDefault();
+
+        // ブックマークを並び替えしている場合のハイライト
+        const dropBookmark = e.target.closest('[data-drop-bookmark-id]');
+        if (dropBookmark && state.draggedBookmarkId) {
+          dropBookmark.classList.add('border-t-2', 'border-indigo-500');
+        }
+
+        // グループサイドバーの並び替えのハイライト
+        const dropGroup = e.target.closest('[data-drop-group-index]');
+        if (dropGroup && state.draggedGroupId && !state.draggedBookmarkId) {
+          dropGroup.classList.add('border-t-2', 'border-indigo-500');
+        }
+
+        // ブックマークをグループ(サイドバー、パネル)に重ねたときのハイライト
+        const dropPanel = e.target.closest('[data-drop-group-id]');
+        if (dropPanel && state.draggedBookmarkId) {
+          dropPanel.classList.add('ring-2', 'ring-indigo-400');
+        }
+      });
+
+      // ドラッグエリアから離れた時
+      app.addEventListener('dragleave', (e) => {
+        const dropBookmark = e.target.closest('[data-drop-bookmark-id]');
+        if (dropBookmark) {
+          dropBookmark.classList.remove('border-t-2', 'border-indigo-500');
+        }
+        const dropGroup = e.target.closest('[data-drop-group-index]');
+        if (dropGroup) {
+          dropGroup.classList.remove('border-t-2', 'border-indigo-500');
+        }
+        const dropPanel = e.target.closest('[data-drop-group-id]');
+        if (dropPanel) {
+          dropPanel.classList.remove('ring-2', 'ring-indigo-400');
+        }
+      });
+
+      // ドロップ時
+      app.addEventListener('drop', (e) => {
+        e.preventDefault();
+        
+        // 1. ブックマークをドラッグ中の場合
+        if (state.draggedBookmarkId) {
+          const targetGroupEl = e.target.closest('[data-drop-group-id]');
+          const targetGroupId = targetGroupEl ? targetGroupEl.getAttribute('data-drop-group-id') : null;
+          
+          const targetBookmarkEl = e.target.closest('[data-drop-bookmark-id]');
+          const targetBookmarkIdxStr = targetBookmarkEl ? targetBookmarkEl.getAttribute('data-drop-bookmark-index') : null;
+
+          if (targetGroupId && targetGroupId !== 'all') {
+            // グループの変更
+            const bm = state.bookmarks.find(b => b.id === state.draggedBookmarkId);
+            if (bm) bm.groupId = targetGroupId;
+
+            // 位置並べ替え
+            if (targetBookmarkIdxStr !== null) {
+              const targetIdx = parseInt(targetBookmarkIdxStr, 10);
+              const draggedIdx = state.draggedIndex;
+              if (draggedIdx !== null && draggedIdx !== targetIdx) {
+                const displayed = getFilteredBookmarksForGroup(targetGroupId);
+                const draggedItem = displayed[draggedIdx];
+                const targetItem = displayed[targetIdx];
+
+                if (draggedItem && targetItem) {
+                  const globalDragIdx = state.bookmarks.findIndex(b => b.id === draggedItem.id);
+                  const globalTargetIdx = state.bookmarks.findIndex(b => b.id === targetItem.id);
+
+                  if (globalDragIdx !== -1 && globalTargetIdx !== -1) {
+                    const [removed] = state.bookmarks.splice(globalDragIdx, 1);
+                    state.bookmarks.splice(globalTargetIdx, 0, removed);
+                  }
+                }
+              }
+            }
+            saveState();
+            render();
+          }
+        } 
+        // 2. グループパネル・グループリストをドラッグ中の場合
+        else if (state.draggedGroupId) {
+          const targetGroupEl = e.target.closest('[data-drop-group-index]');
+          const targetGroupIdxStr = targetGroupEl ? targetGroupEl.getAttribute('data-drop-group-index') : null;
+
+          if (targetGroupIdxStr !== null) {
+            const targetIdx = parseInt(targetGroupIdxStr, 10);
+            const draggedIdx = state.draggedGroupIndex;
+            
+            // システムグループではない場合に限り、順番を入れ替える
+            if (draggedIdx !== null && draggedIdx !== targetIdx && !state.groups[targetIdx].isSystem && !state.groups[draggedIdx].isSystem) {
+              const updated = [...state.groups];
+              const [removed] = updated.splice(draggedIdx, 1);
+              updated.splice(targetIdx, 0, removed);
+              state.groups = updated;
+              saveState();
+              render();
+            }
+          }
+        }
+
+        cleanDragStates();
+      });
+
+      // ドラッグ終了
+      app.addEventListener('dragend', () => {
+        cleanDragStates();
+        render();
+      });
+    }
+
+    function cleanDragStates() {
+      state.draggedBookmarkId = null;
+      state.draggedGroupId = null;
+      state.draggedIndex = null;
+      state.draggedGroupIndex = null;
+      state.dragOverIndex = null;
+      state.dragOverGroupIndex = null;
+      state.dragOverGroupId = null;
+    }
+
+
+    // --- レンダリングエンジンの実装 ---
+
+    // A. 1行ごとのブックマークテンプレート生成
+    function getBookmarkItemHtml(bookmark, index, group) {
+      const isEditing = state.editingBookmarkId === bookmark.id;
+      const isItemOver = state.dragOverIndex === index && state.dragOverGroupId === group.id;
+      const isDragged = state.draggedBookmarkId === bookmark.id;
+
+      let editBtnHtml = '';
+      if (isEditing) {
+        editBtnHtml = `
+          <button onclick="saveBookmarkEdit('${bookmark.id}')" class="flex items-center justify-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold rounded-lg transition shadow-sm" title="保存">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            <span>完了</span>
+          </button>
+          <button onclick="cancelBookmarkEdit('${bookmark.id}')" class="px-3 py-1.5 font-semibold rounded-lg text-xs transition bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+            キャンセル
+          </button>
+        `;
+      } else {
+        editBtnHtml = `
+          <button onclick="startEditBookmark('${bookmark.id}', \`${bookmark.title}\`, '${bookmark.url}', '${bookmark.groupId}')" class="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg transition text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-slate-800" title="編集">
+            <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+            <span>編集</span>
+          </button>
+          <button onclick="deleteBookmark('${bookmark.id}')" class="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg transition text-xs font-medium text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:text-slate-500 dark:hover:text-rose-400 dark:hover:bg-slate-800" title="削除">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>削除</span>
+          </button>
+        `;
+      }
+
+      let titleContentHtml = '';
+      if (isEditing) {
+        titleContentHtml = `
+          <div>
+            <label class="block md:hidden text-[10px] text-slate-500 font-bold uppercase mb-1">タイトル</label>
+            <input type="text" id="active-edit-title" value="${state.editingBookmarkTitle}" placeholder="タイトル" class="w-full px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100" />
+          </div>
+        `;
+      } else {
+        titleContentHtml = `
+          <div class="flex items-center gap-1.5 group">
+            <a href="${bookmark.url || '#'}" target="_blank" rel="noopener noreferrer" class="font-semibold text-sm break-all inline-flex items-center gap-1.5 transition ${!bookmark.url ? 'pointer-events-none text-slate-400 dark:text-slate-600 font-normal italic' : 'text-slate-850 hover:text-indigo-500 dark:text-slate-200 dark:hover:text-indigo-400'}">
+              ${bookmark.title || '無題のブックマーク'}
+              ${bookmark.url ? '<i data-lucide="external-link" class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500 shrink-0"></i>' : ''}
+            </a>
+          </div>
+        `;
+      }
+
+      let urlContentHtml = '';
+      if (isEditing) {
+        urlContentHtml = `
+          <div class="space-y-2">
+            <div>
+              <label class="block md:hidden text-[10px] text-slate-505 font-bold uppercase mb-1">URL</label>
+              <input type="text" id="active-edit-url" value="${state.editingBookmarkUrl}" placeholder="URL" class="w-full px-3 py-1.5 border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100" />
+            </div>
+            <div class="md:hidden">
+              <label class="block text-[10px] text-slate-505 font-bold uppercase mb-1">グループ</label>
+              <select id="active-edit-group-select-mobile" class="w-full px-2.5 py-1.5 border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white border-slate-200 text-slate-800 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200">
+                ${state.groups.filter(g => g.id !== 'all').map(g => `<option value="${g.id}" ${state.editingBookmarkGroupId === g.id ? 'selected' : ''}>${g.name || '名称未設定'}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        `;
+      } else {
+        urlContentHtml = `
+          <div class="min-w-0">
+            ${bookmark.url ? `
+              <a href="${bookmark.url}" target="_blank" rel="noopener noreferrer" class="text-xs font-mono block truncate text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-indigo-400">
+                ${bookmark.url}
+              </a>
+            ` : '<span class="text-xs text-slate-400 dark:text-slate-600 italic">URL未登録</span>'}
+          </div>
+          <div class="flex items-center gap-1.5 md:hidden mt-1">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-850 dark:border-slate-800 dark:text-slate-400">
+              <i data-lucide="folder" class="w-2.5 h-2.5"></i>
+              ${state.groups.find(g => g.id === bookmark.groupId)?.name || '未分類'}
+            </span>
+          </div>
+        `;
+      }
+
+      let desktopGroupSelect = '';
+      if (isEditing) {
+        desktopGroupSelect = `
+          <div class="hidden md:block col-span-2">
+            <select id="active-edit-group-select" class="w-full px-2 py-1 border rounded-lg text-xs focus:outline-none bg-white border-slate-200 text-slate-800 dark:bg-slate-955 dark:border-slate-800 dark:text-slate-200">
+              ${state.groups.filter(g => g.id !== 'all').map(g => `<option value="${g.id}" ${state.editingBookmarkGroupId === g.id ? 'selected' : ''}>${g.name || '名称未設定'}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else {
+        desktopGroupSelect = `
+          <div class="hidden md:flex col-span-2 items-center">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-850 dark:border-slate-800 dark:text-slate-400">
+              <i data-lucide="folder" class="w-2.5 h-2.5"></i>
+              ${state.groups.find(g => g.id === bookmark.groupId)?.name || '未分類'}
+            </span>
+          </div>
+        `;
+      }
+
+      let dragIndicatorClass = isItemOver ? 'border-t-2 border-indigo-500' : 'border-t border-transparent';
+      let draggedClass = isDragged ? 'opacity-30' : '';
+
+      return `
+        <div 
+          class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-center py-3.5 px-3 rounded-lg transition duration-150 ${isEditing ? 'bg-indigo-50/50 dark:bg-slate-950/60' : 'hover:bg-slate-50/50 dark:hover:bg-slate-850/30'} ${draggedClass} ${dragIndicatorClass}"
+          ${!isEditing ? `draggable="true" data-drag-type="bookmark" data-id="${bookmark.id}" data-index="${index}" data-group-id="${group.id}"` : ''}
+          data-drop-bookmark-id="${bookmark.id}"
+          data-drop-bookmark-index="${index}"
+          data-drop-group-id="${group.id}"
+        >
+          <!-- グリップハンドル -->
+          <div class="hidden md:flex col-span-1 justify-center">
+            <span class="p-0.5 rounded cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-400 dark:text-slate-600 dark:hover:text-slate-400 transition shrink-0" data-drag-handle="bookmark">
+              <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+            </span>
+          </div>
+
+          <!-- タイトル -->
+          <div class="col-span-1 md:col-span-4 min-w-0">
+            ${titleContentHtml}
+          </div>
+
+          <!-- URL -->
+          <div class="col-span-1 md:col-span-4 min-w-0">
+            ${urlContentHtml}
+          </div>
+
+          <!-- デスクトップ用グループ表示 / 選択 -->
+          ${desktopGroupSelect}
+
+          <!-- ボタン類 -->
+          <div class="col-span-1 md:col-span-1 flex items-center justify-end gap-2 shrink-0 pt-2 md:pt-0 border-t border-dashed md:border-t-0 border-slate-100 dark:border-slate-850">
+            ${editBtnHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // B. メインのビューポート更新
+    function render() {
+      const app = document.getElementById('app');
+      if (!app) return;
+
+      // 1. 初回訪問時のウェルカム画面
+      if (state.showWelcome) {
+        app.className = ""; // リセット
+        app.innerHTML = `
+          <div class="min-h-screen flex items-center justify-center p-4 transition-colors duration-200 ${state.darkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'}">
+            <div class="max-w-md w-full rounded-2xl border p-8 text-center transition-colors duration-200 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
+              
+              <div class="mx-auto w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-indigo-50 text-indigo-600 dark:bg-slate-800 dark:text-indigo-400">
+                <i data-lucide="bookmark" class="w-6 h-6"></i>
+              </div>
+
+              <h1 class="text-xl font-bold tracking-tight mb-2 text-slate-900 dark:text-slate-100">
+                Local Bookmarks
+              </h1>
+              <p class="text-xs leading-relaxed mb-8 text-slate-505 dark:text-slate-400">
+                ブラウザのローカル領域にデータを保存する、シンプルなブックマーク管理ツールです。
+              </p>
+
+              <div class="space-y-3 mb-6 text-left">
+                <button onclick="handleStartWithSamples()" class="w-full p-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl transition duration-150 flex items-center justify-between text-left shadow-sm">
+                  <div>
+                    <p class="font-semibold text-sm">サンプルを読み込む</p>
+                    <p class="text-[11px] text-indigo-100 mt-0.5">数件の初期データを含めて開始します。</p>
+                  </div>
+                  <i data-lucide="chevron-right" class="w-4 h-4 shrink-0"></i>
+                </button>
+
+                <button onclick="handleStartWithEmpty()" class="w-full p-4 rounded-xl transition duration-150 border flex items-center justify-between text-left bg-white hover:bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-700">
+                  <div>
+                    <p class="font-semibold text-sm">空の状態で始める</p>
+                    <p class="text-[11px] text-slate-505 dark:text-slate-400 mt-0.5">初期データを追加せず開始します。</p>
+                  </div>
+                  <i data-lucide="chevron-right" class="w-4 h-4 shrink-0"></i>
+                </button>
+              </div>
+
+              <div class="flex justify-center">
+                <button onclick="toggleDarkMode()" class="p-2 rounded-lg border flex items-center gap-1.5 text-xs transition-colors duration-150 bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-750 dark:text-slate-300 dark:hover:bg-slate-700">
+                  ${state.darkMode ? '<i data-lucide="sun" class="w-3.5 h-3.5 text-amber-400"></i>' : '<i data-lucide="moon" class="w-3.5 h-3.5 text-indigo-500"></i>'}
+                  <span>${state.darkMode ? 'ライトモード' : 'ダークモード'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      // 2. メインのアプリケーションレイアウト
+      app.innerHTML = `
+        <div class="min-h-screen font-sans antialiased pb-12 transition-colors duration-200 ${state.darkMode ? 'bg-slate-955 text-slate-100' : 'bg-slate-50 text-slate-800'}">
+          
+          <!-- モーダル・ファイルインプット -->
+          <input type="file" id="hidden-file-input" onchange="handleFileChange(event)" accept=".json" class="hidden" />
+          
+          <!-- インポート方法選択モーダル -->
+          <div id="import-modal-container" class="hidden"></div>
+
+          <!-- ヘッダー -->
+          <header class="border-b sticky top-0 z-20 transition-colors duration-200 ${state.darkMode ? 'bg-slate-900 border-slate-800 shadow-none' : 'bg-white border-slate-200 shadow-sm'}">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="p-2 rounded-xl shadow-sm bg-indigo-600 text-white">
+                  <i data-lucide="bookmark" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Local Bookmarks</h1>
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <!-- テーマ切り替えトグル -->
+                <button onclick="toggleDarkMode()" class="p-2 rounded-xl border transition-colors duration-150 ${state.darkMode ? 'bg-slate-800 border-slate-750 text-amber-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50'}" title="${state.darkMode ? 'ライトモード' : 'ダークモード'}">
+                  ${state.darkMode ? '<i data-lucide="sun" class="w-4 h-4"></i>' : '<i data-lucide="moon" class="w-4 h-4"></i>'}
+                </button>
+
+                <button onclick="handleAddNewGroupDirect()" class="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold rounded-xl transition duration-200 text-sm shadow-sm">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  グループを追加
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <!-- メインボディ -->
+          <main class="max-w-7xl mx-auto px-4 mt-6">
+            
+            <!-- モバイル用：横スクロールカテゴリータブ -->
+            <div class="block lg:hidden mb-6">
+              <p class="text-[10px] font-bold uppercase mb-2 px-1 text-slate-400 dark:text-slate-505">グループを選択</p>
+              <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                ${state.groups.map(group => {
+                  const isActive = state.activeGroupId === group.id;
+                  const count = state.bookmarks.filter(b => group.id === 'all' ? true : b.groupId === group.id).length;
+                  return `
+                    <button 
+                      onclick="setActiveGroup('${group.id}')"
+                      class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border shrink-0 ${
+                        isActive 
+                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm' 
+                          : state.darkMode 
+                            ? 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700' 
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                      }"
+                      data-drop-group-id="${group.id}"
+                    >
+                      <i data-lucide="folder" class="w-3.5 h-3.5"></i>
+                      <span>${group.name || '名称未設定'}</span>
+                      <span class="px-1.5 py-0.2 rounded-full text-[10px] ${isActive ? 'bg-indigo-500 text-white' : state.darkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-505'}">
+                        ${count}
+                      </span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- インポートエラー/警告 & サーチツールバー -->
+            <div class="space-y-4 mb-6">
+              <div id="import-error-container"></div>
+              
+              <div class="rounded-2xl p-4 border flex flex-col md:flex-row gap-4 items-center justify-between transition-colors duration-200 ${state.darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}">
+                <div class="relative w-full md:w-80">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 dark:text-slate-505">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    id="search-input"
+                    oninput="handleSearchInput(event)"
+                    value="${state.searchQuery}"
+                    placeholder="タイトルやURLで検索..." 
+                    class="w-full pl-9 pr-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${
+                      state.darkMode 
+                        ? 'bg-slate-950 border-slate-800 text-slate-200 placeholder-slate-600' 
+                        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
+                    }"
+                  />
+                </div>
+
+                <!-- モバイル用バックアップ管理 (小画面のみ) -->
+                <div class="flex lg:hidden items-center gap-2 w-full sm:w-auto">
+                  <button onclick="triggerFileInput()" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-semibold transition ${state.darkMode ? 'bg-slate-955 border-slate-850 hover:border-slate-700 text-slate-300' : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600'}">
+                    <i data-lucide="upload" class="w-3.5 h-3.5 text-indigo-500"></i>
+                    <span>インポート</span>
+                  </button>
+                  <button onclick="handleExportData()" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-semibold transition ${state.darkMode ? 'bg-slate-955 border-slate-850 hover:border-slate-700 text-slate-300' : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600'}">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-500"></i>
+                    <span>バックアップ</span>
+                  </button>
+                </div>
+
+                <div class="hidden lg:flex items-center gap-2 text-xs px-3.5 py-2 rounded-xl border ${state.darkMode ? 'bg-slate-955/40 border-slate-855/60 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-505'}">
+                  <i data-lucide="info" class="w-4 h-4 text-indigo-500 shrink-0"></i>
+                  <span>グループのヘッダーやサイドバーをドラッグして並べ替え。別フォルダへドラッグで移動も可能です。</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- メイングリッド (2カラム) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              
+              <!-- 左サイドバー (デスクトップのみ) -->
+              <aside class="hidden lg:flex lg:col-span-3 flex-col gap-4">
+                <div class="border rounded-2xl p-4 flex flex-col transition-colors duration-200 ${state.darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}">
+                  <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="text-sm font-bold flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                      <i data-lucide="folder-open" class="w-4 h-4 text-indigo-500"></i>
+                      グループ一覧
+                    </h2>
+                  </div>
+
+                  <!-- グループ追加インプット -->
+                  <form onsubmit="handleAddGroupSidebar(event)" class="mb-4 flex gap-1.5">
+                    <input 
+                      type="text" 
+                      id="sidebar-new-group-input" 
+                      placeholder="新しいグループ..." 
+                      class="flex-1 px-3 py-1.5 border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
+                        state.darkMode 
+                          ? 'bg-slate-950 border-slate-855 text-slate-200 placeholder-slate-600' 
+                          : 'bg-slate-50 border-slate-200 text-slate-855 placeholder-slate-400'
+                      }"
+                    />
+                    <button type="submit" class="p-1.5 rounded-lg transition ${state.darkMode ? 'bg-slate-850 hover:bg-slate-800 text-indigo-400' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600'}" title="グループ作成">
+                      <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                    </button>
+                  </form>
+
+                  <!-- グループリスト -->
+                  <div id="sidebar-group-list" class="space-y-1 max-h-[380px] overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- データのバックアップ管理パネル -->
+                <div class="border rounded-2xl p-4 transition-colors duration-200 ${state.darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}">
+                  <h3 class="text-[10px] font-bold uppercase tracking-wider mb-3 text-slate-400 dark:text-slate-505">データのバックアップ</h3>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button onclick="triggerFileInput()" class="flex items-center justify-center gap-1 px-2.5 py-2 border rounded-xl text-xs font-semibold transition duration-150 ${state.darkMode ? 'bg-slate-950 border-slate-800 hover:border-indigo-500 text-slate-300 hover:text-indigo-400' : 'bg-slate-50/50 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 text-slate-600'}" title="JSONバックアップから復元">
+                      <i data-lucide="upload" class="w-3.5 h-3.5 text-indigo-500"></i>
+                      <span>復元</span>
+                    </button>
+                    <button onclick="handleExportData()" class="flex items-center justify-center gap-1 px-2.5 py-2 border rounded-xl text-xs font-semibold transition duration-150 ${state.darkMode ? 'bg-slate-950 border-slate-800 hover:border-indigo-500 text-slate-300 hover:text-indigo-400' : 'bg-slate-50/50 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 text-slate-600'}" title="すべてのデータをエクスポート">
+                      <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-500"></i>
+                      <span>保存</span>
+                    </button>
+                  </div>
+                </div>
+              </aside>
+
+              <!-- 右カラム：ブックマーク表示エリア -->
+              <section id="main-bookmark-container" class="col-span-1 lg:col-span-9"></section>
+
+            </div>
+          </main>
+        </div>
+      `;
+
+      // 3. インポート警告・エラー表示の更新
+      renderImportError();
+
+      // 4. インポートモーダルの更新
+      renderImportModal();
+
+      // 5. グループ一覧サイドバーの更新 (デスクトップ用)
+      renderSidebarGroups();
+
+      // 6. メインブックマークコンテナの更新
+      renderBookmarksOnly();
+
+      // アイコンをレンダリング
+      lucide.createIcons();
+
+      // 新規入力/編集開始時のオートフォーカス制御
+      applyAutofocus();
+    }
+
+    // エラーメッセージのインライン描画
+    function renderImportError() {
+      const container = document.getElementById('import-error-container');
+      if (!container) return;
+
+      if (state.importError) {
+        container.innerHTML = `
+          <div class="border rounded-xl p-4 flex items-start gap-2.5 animate-in slide-in-from-top-2 duration-150 ${state.darkMode ? 'bg-rose-955/20 border-rose-900 text-rose-200' : 'bg-rose-50 border-rose-200 text-rose-800'}">
+            <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 text-rose-500"></i>
+            <div class="flex-1 text-xs font-medium">
+              <p>${state.importError}</p>
+            </div>
+            <button onclick="clearImportError()" class="p-1 rounded transition ${state.darkMode ? 'hover:bg-rose-955/40 text-rose-400' : 'hover:bg-rose-100 text-rose-500'}">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = '';
+      }
+    }
+
+    function clearImportError() {
+      state.importError = '';
+      renderImportError();
+    }
+
+    // インポート方法選択モーダルの描画
+    function renderImportModal() {
+      const container = document.getElementById('import-modal-container');
+      if (!container) return;
+
+      if (state.showImportModal && state.importData) {
+        container.classList.remove('hidden');
+        container.innerHTML = `
+          <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="rounded-2xl border shadow-2xl max-w-md w-full p-6 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${state.darkMode ? 'bg-slate-900 border-slate-850 text-slate-100' : 'bg-white border-slate-200 text-slate-800'}">
+              <div class="flex items-center gap-3 mb-4 text-amber-500">
+                <i data-lucide="alert-triangle" class="w-7 h-7"></i>
+                <h3 class="text-lg font-bold">ブックマークデータの復元</h3>
+              </div>
+              
+              <p class="text-xs leading-relaxed mb-6 ${state.darkMode ? 'text-slate-400' : 'text-slate-600'}">
+                読み込んだバックアップデータ（グループ: <strong>${state.importData.groups?.filter(g=>!g.isSystem).length || 0}個</strong>、ブックマーク: <strong>${state.importData.bookmarks?.length || 0}件</strong>）のインポート方法を選択してください。
+              </p>
+
+              <div class="space-y-3 mb-6">
+                <!-- 方法A: 結合 -->
+                <button onclick="handleImportMerge()" class="w-full p-3.5 border rounded-xl transition text-left flex items-start gap-3 group ${state.darkMode ? 'bg-slate-800 hover:bg-slate-750 border-slate-700 hover:border-indigo-500' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 hover:border-indigo-200'}">
+                  <div class="p-1.5 rounded-lg shrink-0 mt-0.5 ${state.darkMode ? 'bg-indigo-950 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-xs text-slate-900 dark:text-slate-100">現在のデータに追加（結合マージ）</p>
+                    <p class="text-[10px] mt-1 ${state.darkMode ? 'text-slate-400' : 'text-slate-500'}">既存データは維持し、新しいデータのみをリストに追加します。</p>
+                  </div>
+                </button>
+
+                <!-- 方法B: 上書き -->
+                <button onclick="handleImportOverwrite()" class="w-full p-3.5 border rounded-xl transition text-left flex items-start gap-3 group ${state.darkMode ? 'bg-rose-955/20 hover:bg-rose-955/40 border-rose-900/50 hover:border-rose-700' : 'bg-rose-50/30 hover:bg-rose-50 border-rose-100 hover:border-rose-200'}">
+                  <div class="p-1.5 rounded-lg shrink-0 mt-0.5 ${state.darkMode ? 'bg-rose-955 text-rose-400' : 'bg-rose-100 text-rose-600'}">
+                    <i data-lucide="database" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-xs ${state.darkMode ? 'text-rose-400' : 'text-rose-900'}">現在のデータを消去して置換（上書き）</p>
+                    <p class="text-[10px] mt-1 ${state.darkMode ? 'text-rose-300/70' : 'text-rose-600/80'}">現在保存されているすべてのブックマークとグループを消去し上書きします。</p>
+                  </div>
+                </button>
+              </div>
+
+              <div class="flex justify-end gap-2">
+                <button onclick="cancelImport()" class="px-4 py-2 font-medium rounded-xl text-xs transition ${state.darkMode ? 'bg-slate-850 hover:bg-slate-800 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}">
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+      }
+    }
+
+    function cancelImport() {
+      state.showImportModal = false;
+      state.importData = null;
+      renderImportModal();
+    }
+
+    // デスクトップ用サイドバーグループ一覧の描画
+    function renderSidebarGroups() {
+      const container = document.getElementById('sidebar-group-list');
+      if (!container) return;
+
+      let html = '';
+      state.groups.forEach((group, index) => {
+        const isActive = state.activeGroupId === group.id;
+        const count = state.bookmarks.filter(b => group.id === 'all' ? true : b.groupId === group.id).length;
+        const isEditing = state.editingGroupId === group.id;
+
+        const isOver = state.dragOverGroupIndex === index;
+        const isDragOverPanel = state.dragOverGroupId === group.id && state.draggedBookmarkId !== null;
+
+        let activeClasses = isActive
+          ? state.darkMode 
+            ? 'bg-indigo-950/40 border-indigo-900 text-indigo-300 font-semibold' 
+            : 'bg-indigo-50 border-indigo-100 text-indigo-700 font-semibold'
+          : 'bg-transparent border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-955 dark:text-slate-400 dark:hover:bg-slate-850 dark:hover:text-slate-100';
+
+        let dragFeedbackClasses = '';
+        if (isDragOverPanel) {
+          dragFeedbackClasses = 'bg-indigo-100 dark:bg-indigo-950 border-indigo-300';
+        } else if (isOver && state.draggedGroupId !== null) {
+          dragFeedbackClasses = 'border-t-2 border-indigo-500 bg-slate-50 dark:bg-slate-850';
+        }
+
+        let innerContent = '';
+        if (isEditing) {
+          innerContent = `
+            <div class="flex items-center gap-1 w-full" onclick="event.stopPropagation()">
+              <input 
+                type="text" 
+                id="active-edit-group-name" 
+                value="${state.editingGroupName}" 
+                onkeydown="if(event.key === 'Enter') saveGroupName('${group.id}')" 
+                class="flex-1 px-2 py-0.5 border rounded text-xs focus:outline-none ${state.darkMode ? 'bg-slate-950 border-slate-700 text-slate-100' : 'bg-white border-indigo-400 text-slate-800'}" 
+              />
+              <button onclick="saveGroupName('${group.id}')" class="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="cancelGroupEdit()" class="p-1 rounded hover:bg-slate-300 dark:hover:bg-slate-700 ${state.darkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-600'}">
+                <i data-lucide="x" class="w-3 h-3"></i>
+              </button>
+            </div>
+          `;
+        } else {
+          innerContent = `
+            <div class="flex items-center gap-1.5 flex-1 min-w-0">
+              ${!group.isSystem ? `
+                <span class="p-0.5 rounded cursor-grab active:cursor-grabbing transition shrink-0 ${state.darkMode ? 'text-slate-600 hover:text-slate-400 hover:bg-slate-800' : 'text-slate-300 hover:text-slate-400 hover:bg-slate-100'}">
+                  <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
+                </span>
+              ` : '<span class="w-5 shrink-0"></span>'}
+
+              <button onclick="setActiveGroup('${group.id}')" class="flex items-center gap-2 flex-1 text-left min-w-0">
+                <i data-lucide="folder" class="w-4 h-4 shrink-0 ${isActive ? 'text-indigo-500 fill-indigo-100 dark:fill-indigo-950/40' : 'text-slate-400'}"></i>
+                <span class="truncate">${group.name}</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] ml-auto shrink-0 ${isActive ? 'bg-indigo-200/50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400' : 'bg-slate-100 text-slate-505 dark:bg-slate-800 dark:text-slate-400'}">
+                  ${count}
+                </span>
+              </button>
+            </div>
+            ${!group.isSystem ? `
+              <div class="opacity-0 group-hover/item:opacity-100 flex items-center gap-0.5 ml-2 transition-opacity">
+                <button onclick="event.stopPropagation(); startEditGroup('${group.id}', \`${group.name}\`)" class="p-1 rounded transition ${state.darkMode ? 'text-slate-505 hover:text-indigo-400 hover:bg-slate-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-white'}" title="名前の変更">
+                  <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="event.stopPropagation(); deleteGroup('${group.id}')" class="p-1 rounded transition ${state.darkMode ? 'text-slate-505 hover:text-rose-400 hover:bg-slate-800' : 'text-slate-400 hover:text-rose-600 hover:bg-white'}" title="グループ削除">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            ` : ''}
+          `;
+        }
+
+        html += `
+          <div 
+            class="group/item flex items-center justify-between rounded-xl p-2 transition-all duration-150 border text-sm ${activeClasses} ${dragFeedbackClasses}"
+            ${!group.isSystem && !isEditing ? `draggable="true" data-drag-type="group" data-group-id="${group.id}" data-group-index="${index}"` : ''}
+            data-drop-group-id="${group.id}"
+            data-drop-group-index="${index}"
+          >
+            ${innerContent}
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // ブックマーク詳細カードエリアの更新
+    function renderBookmarksOnly() {
+      const container = document.getElementById('main-bookmark-container');
+      if (!container) return;
+
+      let html = '';
+
+      // A. 「すべてのブックマーク」表示（グループ別のパネルを縦一列表示）
+      if (state.activeGroupId === 'all') {
+        const visibleGroups = state.groups.filter(g => g.id !== 'all');
+        
+        visibleGroups.forEach((group) => {
+          const groupBookmarks = getFilteredBookmarksForGroup(group.id);
+          const globalGroupIndex = state.groups.findIndex(g => g.id === group.id);
+          
+          const isPanelOver = state.dragOverGroupId === group.id && state.draggedBookmarkId !== null;
+          const isGroupDraggingOver = state.dragOverGroupIndex === globalGroupIndex && state.draggedGroupIndex !== null;
+
+          let panelHighlightClasses = isPanelOver 
+            ? 'border-indigo-500 ring-4 ring-indigo-50 dark:ring-indigo-950/40 shadow-lg' 
+            : state.darkMode ? 'border-slate-800' : 'border-slate-200';
+          let groupDragOverClasses = isGroupDraggingOver ? 'border-t-4 border-indigo-500 bg-slate-50/50 dark:bg-slate-850/50' : '';
+
+          let innerBookmarksHtml = '';
+          if (groupBookmarks.length === 0) {
+            innerBookmarksHtml = `
+              <div class="py-8 text-center text-xs text-slate-400">
+                <i data-lucide="move" class="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2 animate-bounce"></i>
+                <p>ブックマークがありません</p>
+                <p class="mt-1 text-[10px] text-slate-600 dark:text-slate-400">ここにドラッグして移動できます</p>
+              </div>
+            `;
+          } else {
+            groupBookmarks.forEach((bookmark, index) => {
+              innerBookmarksHtml += getBookmarkItemHtml(bookmark, index, group);
+            });
+          }
+
+          html += `
+            <div 
+              class="rounded-2xl border transition-all duration-200 overflow-hidden flex flex-col ${state.darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'} ${panelHighlightClasses} ${groupDragOverClasses}"
+              data-drop-group-id="${group.id}"
+              data-drop-group-index="${globalGroupIndex}"
+            >
+              <!-- グループヘッダー -->
+              <div 
+                draggable="${!group.isSystem}"
+                data-drag-type="group-panel"
+                data-group-id="${group.id}"
+                data-group-index="${globalGroupIndex}"
+                ondragstart="state.draggedGroupIndex = ${globalGroupIndex}; state.draggedGroupId = '${group.id}'"
+                class="px-5 py-4 border-b flex items-center justify-between ${state.darkMode ? 'bg-slate-900/50 border-slate-800/80' : 'bg-slate-50 border-slate-100'} ${!group.isSystem ? 'cursor-grab active:cursor-grabbing hover:bg-slate-100/50 dark:hover:bg-slate-850/50' : ''} ${state.draggedGroupIndex === globalGroupIndex ? 'opacity-40' : ''}"
+              >
+                <div class="flex items-center gap-2 min-w-0 select-none">
+                  ${!group.isSystem ? `
+                    <span class="p-0.5 rounded ${state.darkMode ? 'text-slate-600' : 'text-slate-300'}">
+                      <i data-lucide="grip-vertical" class="w-4 h-4 shrink-0"></i>
+                    </span>
+                  ` : ''}
+                  <i data-lucide="folder" class="w-4 h-4 text-indigo-500 shrink-0"></i>
+                  <h3 class="font-bold text-sm truncate ${state.darkMode ? 'text-slate-200' : 'text-slate-800'}">${group.name || '新規グループ'}</h3>
+                  <span class="px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${state.darkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-200/60 text-slate-600'}">
+                    ${groupBookmarks.length}
+                  </span>
+                </div>
+                
+                <div class="flex items-center gap-1">
+                  <button onclick="event.stopPropagation(); addBookmark('${group.id}')" class="p-1.5 rounded-lg transition ${state.darkMode ? 'text-indigo-400 hover:bg-slate-800' : 'text-indigo-600 hover:bg-indigo-50'}" title="${group.name} に追加">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ブックマークリスト -->
+              <div class="p-3 divide-y ${state.darkMode ? 'divide-slate-850' : 'divide-slate-100'}">
+                ${innerBookmarksHtml}
+              </div>
+            </div>
+          `;
+        });
+
+        // 縦一列並びに調整するためラップ
+        container.innerHTML = `<div class="flex flex-col gap-6">${html}</div>`;
+      } 
+      // B. 特定のグループのみの表示
+      else {
+        const group = state.groups.find(g => g.id === state.activeGroupId);
+        const groupBookmarks = getFilteredBookmarksForGroup(state.activeGroupId);
+        
+        let innerBookmarksHtml = '';
+        if (groupBookmarks.length === 0) {
+          innerBookmarksHtml = `
+            <div class="py-16 text-center">
+              <i data-lucide="bookmark" class="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3"></i>
+              <p class="text-slate-505 font-medium">表示可能なブックマークがありません</p>
+              <p class="text-sm mt-1 ${state.darkMode ? 'text-slate-505' : 'text-slate-400'}">
+                ${state.searchQuery ? '検索内容に該当するものがありません。' : 'グループ内の「+」ボタンから追加しましょう！'}
+              </p>
+            </div>
+          `;
+        } else {
+          groupBookmarks.forEach((bookmark, index) => {
+            innerBookmarksHtml += getBookmarkItemHtml(bookmark, index, group);
+          });
+        }
+
+        container.innerHTML = `
+          <div class="rounded-2xl border transition-colors duration-200 ${state.darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}">
+            <!-- リストヘッダー -->
+            <div class="px-6 py-4 border-b flex items-center justify-between ${state.darkMode ? 'bg-slate-900/50 border-slate-800/80' : 'bg-slate-50/50 border-slate-100'}">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  ${group ? group.name : 'ブックマーク'}
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-bold ${state.darkMode ? 'bg-slate-850 text-slate-400' : 'bg-slate-200/60 text-slate-600'}">
+                  ${groupBookmarks.length} 件
+                </span>
+              </div>
+              <button onclick="addBookmark('${group ? group.id : 'unassigned'}')" class="p-1.5 rounded-lg transition ${state.darkMode ? 'text-indigo-400 hover:bg-slate-800' : 'text-indigo-600 hover:bg-indigo-50'}" title="追加">
+                <i data-lucide="plus" class="w-4.5 h-4.5"></i>
+              </button>
+            </div>
+
+            <!-- テーブルヘッダー(大画面のみ) -->
+            <div class="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b text-xs font-bold tracking-wider ${state.darkMode ? 'bg-slate-900/30 border-slate-800 text-slate-505' : 'bg-slate-50/80 border-slate-200 text-slate-505'}">
+              <div class="col-span-1 text-center">移動</div>
+              <div class="col-span-4">タイトル</div>
+              <div class="col-span-4">URL</div>
+              <div class="col-span-2">所属グループ</div>
+              <div class="col-span-1 text-right">アクション</div>
+            </div>
+
+            <!-- ブックマークリスト本体 -->
+            <div class="divide-y ${state.darkMode ? 'divide-slate-850' : 'divide-slate-100'}">
+              ${innerBookmarksHtml}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // 入力エリアへのオートフォーカスの管理
+    function applyAutofocus() {
+      // 1. ブックマークタイトル編集
+      const activeTitleInput = document.getElementById('active-edit-title');
+      if (activeTitleInput && state.editingBookmarkId) {
+        activeTitleInput.focus();
+        // カーソルを末尾へ移動
+        const valLen = activeTitleInput.value.length;
+        activeTitleInput.setSelectionRange(valLen, valLen);
+        return;
+      }
+
+      // 2. 新規グループ名前編集
+      const activeGroupNameInput = document.getElementById('active-edit-group-name');
+      if (activeGroupNameInput && state.editingGroupId) {
+        activeGroupNameInput.focus();
+        const valLen = activeGroupNameInput.value.length;
+        activeGroupNameInput.setSelectionRange(valLen, valLen);
+        return;
+      }
+    }
+  </script>
+</body>
+</html>
