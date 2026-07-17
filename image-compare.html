@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>画像比較スライダー</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media', // ブラウザ（システム）のテーマを自動で尊重する設定
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 画像リストのスクロールバーのシンプル化 */
+    #image-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    #image-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #image-list::-webkit-scrollbar-thumb {
+      background: #e5e5e5;
+      border-radius: 9999px;
+    }
+    /* ブラウザのダークモード設定を尊重 */
+    @media (prefers-color-scheme: dark) {
+      #image-list::-webkit-scrollbar-thumb {
+        background: #262626;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 flex flex-col transition-colors duration-200">
+
+  <!-- ヘッダー -->
+  <header class="border-b border-neutral-200 dark:border-neutral-900 px-4 py-3 flex items-center justify-between bg-white dark:bg-neutral-950">
+    <div class="flex items-center gap-2">
+      <h1 class="text-sm font-semibold tracking-tight">画像比較スライダー</h1>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- 左側：スライダーエリア（8カラム） -->
+    <div class="lg:col-span-8 flex flex-col gap-3">
+      <!-- 比較用コントロール -->
+      <div class="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-neutral-900 p-2 border border-neutral-200 dark:border-neutral-800 rounded-md">
+        <div class="flex items-center gap-1.5">
+          <!-- 分割方向の切り替え -->
+          <button id="btn-vertical" class="flex items-center text-xs px-2.5 py-1.5 rounded transition-colors" title="左右にスライド">
+            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M12 3v18"/>
+            </svg>
+            左右分割
+          </button>
+          <button id="btn-horizontal" class="flex items-center text-xs px-2.5 py-1.5 rounded transition-colors" title="上下にスライド">
+            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M3 12h18"/>
+            </svg>
+            上下分割
+          </button>
+        </div>
+
+        <div>
+          <!-- フィットモードの切り替え -->
+          <button id="btn-fit" class="flex items-center text-xs px-2.5 py-1.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
+            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+            </svg>
+            <span>カバー</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- スライダーコンテナ本体 -->
+      <div id="compare-container" class="relative w-full aspect-video bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md overflow-hidden select-none touch-none cursor-crosshair shadow-sm">
+        <!-- 画像A (下層) -->
+        <img id="image-a" src="" class="absolute inset-0 w-full h-full pointer-events-none" alt="画像A">
+        
+        <!-- 画像B (上層、クリップされる) -->
+        <img id="image-b" src="" class="absolute inset-0 w-full h-full pointer-events-none" alt="画像B">
+        
+        <!-- スライダーの境界線 -->
+        <div id="slider-line" class="absolute bg-neutral-400 dark:bg-neutral-500 pointer-events-none"></div>
+        
+        <!-- スライダーの丸ハンドル -->
+        <div id="slider-handle" class="absolute flex items-center justify-center bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-full shadow-md pointer-events-none transition-shadow">
+          <span id="handle-icon" class="text-xs text-neutral-600 dark:text-neutral-300 font-bold">⇄</span>
+        </div>
+
+        <!-- 2枚未選択時のアラート表示 -->
+        <div id="no-image-alert" class="absolute inset-0 flex flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4 hidden">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">比較する画像を2枚選択してください</p>
+          <p class="text-[10px] text-neutral-400 dark:text-neutral-500">右側の画像ライブラリから A と B を指定します</p>
+        </div>
+      </div>
+      
+      <!-- 左右/上下の役割表示 -->
+      <div id="direction-label" class="flex justify-between text-[10px] text-neutral-400 dark:text-neutral-500 px-1 font-mono">
+        <!-- JSでラベルテキストが入ります -->
+      </div>
+    </div>
+
+    <!-- 右側：アップロード & リスト（4カラム） -->
+    <div class="lg:col-span-4 flex flex-col gap-4">
+      <!-- アップロードエリア -->
+      <div id="dropzone" class="border border-dashed border-neutral-300 dark:border-neutral-800 rounded-md p-5 flex flex-col items-center justify-center bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-950/20 transition-colors cursor-pointer relative group">
+        <input type="file" id="file-input" class="absolute inset-0 opacity-0 cursor-pointer" multiple accept="image/*">
+        <svg class="w-6 h-6 text-neutral-400 dark:text-neutral-500 mb-1.5 group-hover:text-neutral-500 transition-colors" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        <p class="text-[11px] text-neutral-500 dark:text-neutral-400 text-center">ドラッグ＆ドロップ、または選択</p>
+      </div>
+
+      <!-- 画像リスト -->
+      <div class="flex-1 flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md p-4">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-neutral-100 dark:border-neutral-800">
+          <h2 class="text-[11px] font-semibold tracking-wider text-neutral-400 dark:text-neutral-500">画像ライブラリ</h2>
+          <span id="image-count" class="text-[9px] bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 px-1.5 py-0.5 rounded font-mono">0</span>
+        </div>
+        
+        <!-- リスト表示部 -->
+        <div id="image-list" class="flex-1 overflow-y-auto max-h-[300px] lg:max-h-[50vh] pr-1 space-y-2">
+          <!-- JSで動的に追加されます -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // 状態管理
+    let images = [];
+    let imageAId = null;
+    let imageBId = null;
+    let orientation = 'vertical'; // 'vertical' (左右) または 'horizontal' (上下)
+    let fitMode = 'cover'; // 'cover' (アスペクトカバー) または 'contain' (全体表示)
+    let currentPos = 0.5; // スライダー位置 (0 〜 1)
+
+    // サンプル画像（プレースホルダーSVG）
+    const sampleA = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="100%" height="100%" fill="%23e5e5e5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="28" fill="%23737373">IMAGE A (SAMPLE)</text></svg>';
+    const sampleB = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="100%" height="100%" fill="%23262626"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="28" fill="%23a3a3a3">IMAGE B (SAMPLE)</text></svg>';
+
+    // アプリケーションの初期化
+    window.addEventListener('DOMContentLoaded', () => {
+      // 初期状態のサンプル追加
+      images.push({ id: 'sample-a', url: sampleA, name: 'サンプル画像 A.svg', isSample: true });
+      images.push({ id: 'sample-b', url: sampleB, name: 'サンプル画像 B.svg', isSample: true });
+      imageAId = 'sample-a';
+      imageBId = 'sample-b';
+
+      initCompareSlider();
+      setupEventListeners();
+      
+      setOrientation('vertical');
+      updateCompareView();
+      renderImages();
+    });
+
+    // イベントリスナー登録
+    function setupEventListeners() {
+      const fileInput = document.getElementById('file-input');
+      const dropzone = document.getElementById('dropzone');
+      
+      // ファイル選択
+      fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+      });
+
+      // ドラッグ＆ドロップ
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-neutral-500', 'dark:border-neutral-400');
+      });
+
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('border-neutral-500', 'dark:border-neutral-400');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-neutral-500', 'dark:border-neutral-400');
+        handleFiles(e.dataTransfer.files);
+      });
+
+      // 分割方向切替
+      document.getElementById('btn-vertical').addEventListener('click', () => setOrientation('vertical'));
+      document.getElementById('btn-horizontal').addEventListener('click', () => setOrientation('horizontal'));
+
+      // フィット切替
+      document.getElementById('btn-fit').addEventListener('click', toggleFitMode);
+    }
+
+    // ファイル処理
+    function handleFiles(files) {
+      if (!files || files.length === 0) return;
+
+      const validFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+      if (validFiles.length === 0) return;
+
+      validFiles.forEach(file => {
+        const url = URL.createObjectURL(file);
+        const id = 'img-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        images.push({
+          id,
+          url,
+          name: file.name,
+          isSample: false
+        });
+      });
+
+      // 最初のユーザー追加画像がある場合は自動的にスライダーに割り当てる
+      const userAdded = images.filter(img => !img.isSample);
+      if (userAdded.length === 1) {
+        imageAId = userAdded[0].id;
+      } else if (userAdded.length === 2 && images.some(img => img.isSample)) {
+        // サンプルを解除してユーザー画像で満たす
+        imageAId = userAdded[0].id;
+        imageBId = userAdded[1].id;
+      }
+
+      renderImages();
+      updateCompareView();
+    }
+
+    // 画像リストのレンダリング
+    function renderImages() {
+      const listContainer = document.getElementById('image-list');
+      const countLabel = document.getElementById('image-count');
+      
+      listContainer.innerHTML = '';
+      countLabel.textContent = images.length;
+
+      if (images.length === 0) {
+        listContainer.innerHTML = '<p class="text-[11px] text-neutral-400 dark:text-neutral-500 text-center py-6">画像が登録されていません</p>';
+        return;
+      }
+
+      images.forEach(img => {
+        const isA = imageAId === img.id;
+        const isB = imageBId === img.id;
+
+        const card = document.createElement('div');
+        card.className = `flex flex-col p-2 bg-neutral-50 dark:bg-neutral-950 border rounded-md transition-all ${
+          isA ? 'border-neutral-900 dark:border-neutral-200 ring-1 ring-neutral-900 dark:ring-neutral-200' : 
+          isB ? 'border-neutral-400 dark:border-neutral-600 ring-1 ring-neutral-400 dark:ring-neutral-600' : 
+          'border-neutral-200 dark:border-neutral-800'
+        }`;
+
+        // サムネイルコンテナ
+        const imgWrapper = document.createElement('div');
+        imgWrapper.className = 'aspect-video w-full overflow-hidden rounded bg-neutral-200 dark:bg-neutral-900 mb-1.5 relative';
+        
+        const thumbnail = document.createElement('img');
+        thumbnail.src = img.url;
+        thumbnail.className = 'w-full h-full object-cover pointer-events-none';
+        imgWrapper.appendChild(thumbnail);
+
+        // バッジ表示
+        if (isA || isB) {
+          const badge = document.createElement('div');
+          badge.className = `absolute top-1 left-1 text-[9px] font-bold px-1 py-0.5 rounded shadow-sm ${
+            isA ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : 'bg-neutral-400 text-white dark:bg-neutral-600 dark:text-neutral-100'
+          }`;
+          badge.textContent = isA ? 'A' : 'B';
+          imgWrapper.appendChild(badge);
+        }
+
+        card.appendChild(imgWrapper);
+
+        // ファイル名
+        const nameEl = document.createElement('p');
+        nameEl.className = 'text-[10px] text-neutral-500 dark:text-neutral-400 truncate mb-1.5 px-0.5';
+        nameEl.textContent = img.name;
+        card.appendChild(nameEl);
+
+        // 操作アクション
+        const actions = document.createElement('div');
+        actions.className = 'grid grid-cols-3 gap-1';
+
+        // 比較対象 A ボタン
+        const btnA = document.createElement('button');
+        btnA.className = `text-[10px] py-1 rounded font-medium transition-colors ${
+          isA ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900' : 'bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+        }`;
+        btnA.textContent = 'Aに設定';
+        btnA.onclick = () => selectImage('A', img.id);
+        actions.appendChild(btnA);
+
+        // 比較対象 B ボタン
+        const btnB = document.createElement('button');
+        btnB.className = `text-[10px] py-1 rounded font-medium transition-colors ${
+          isB ? 'bg-neutral-500 text-white dark:bg-neutral-400 dark:text-neutral-950' : 'bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+        }`;
+        btnB.textContent = 'Bに設定';
+        btnB.onclick = () => selectImage('B', img.id);
+        actions.appendChild(btnB);
+
+        // 削除ボタン
+        const btnDel = document.createElement('button');
+        btnDel.className = 'text-[10px] py-1 rounded text-neutral-400 hover:text-red-500 dark:text-neutral-600 dark:hover:text-red-400 border border-neutral-200 dark:border-neutral-800 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors flex items-center justify-center';
+        btnDel.innerHTML = `
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        `;
+        btnDel.onclick = () => deleteImage(img.id);
+        actions.appendChild(btnDel);
+
+        card.appendChild(actions);
+        listContainer.appendChild(card);
+      });
+    }
+
+    // A/B選択
+    function selectImage(slot, id) {
+      if (slot === 'A') {
+        if (imageBId === id) imageBId = imageAId; // 入れ替え
+        imageAId = id;
+      } else {
+        if (imageAId === id) imageAId = imageBId; // 入れ替え
+        imageBId = id;
+      }
+      renderImages();
+      updateCompareView();
+    }
+
+    // 削除処理
+    function deleteImage(id) {
+      const index = images.findIndex(img => img.id === id);
+      if (index === -1) return;
+
+      const deleted = images[index];
+      if (!deleted.isSample) {
+        URL.revokeObjectURL(deleted.url); // メモリ解放
+      }
+
+      images.splice(index, 1);
+
+      // 比較画像から消去された場合の代入ロジック
+      if (imageAId === id) {
+        const remaining = images.find(img => img.id !== imageBId);
+        imageAId = remaining ? remaining.id : null;
+      }
+      if (imageBId === id) {
+        const remaining = images.find(img => img.id !== imageAId);
+        imageBId = remaining ? remaining.id : null;
+      }
+
+      renderImages();
+      updateCompareView();
+    }
+
+    // 比較ビューの更新
+    function updateCompareView() {
+      const imgA = document.getElementById('image-a');
+      const imgB = document.getElementById('image-b');
+      const alertBox = document.getElementById('no-image-alert');
+
+      const objA = images.find(img => img.id === imageAId);
+      const objB = images.find(img => img.id === imageBId);
+
+      if (objA && objB) {
+        imgA.src = objA.url;
+        imgB.src = objB.url;
+        imgA.classList.remove('hidden');
+        imgB.classList.remove('hidden');
+        alertBox.classList.add('hidden');
+        
+        // フィットモード適用
+        const styleClass = fitMode === 'cover' ? 'object-cover' : 'object-contain';
+        imgA.className = `absolute inset-0 w-full h-full pointer-events-none ${styleClass}`;
+        imgB.className = `absolute inset-0 w-full h-full pointer-events-none ${styleClass}`;
+        
+        setSliderPosition(currentPos);
+      } else {
+        imgA.classList.add('hidden');
+        imgB.classList.add('hidden');
+        alertBox.classList.remove('hidden');
+      }
+    }
+
+    // スライダー位置適用
+    function setSliderPosition(pos) {
+      currentPos = pos;
+      const percent = (pos * 100).toFixed(2) + '%';
+      
+      const imgB = document.getElementById('image-b');
+      const line = document.getElementById('slider-line');
+      const handle = document.getElementById('slider-handle');
+
+      if (orientation === 'vertical') {
+        // 縦分割 (左右スライダー): 右が画像B
+        imgB.style.clipPath = `polygon(${percent} 0, 100% 0, 100% 100%, ${percent} 100%)`;
+        
+        line.className = "absolute bg-white dark:bg-neutral-400 pointer-events-none shadow-sm";
+        line.style.left = percent;
+        line.style.top = '0';
+        line.style.width = '1px';
+        line.style.height = '100%';
+        line.style.transform = 'translateX(-50%)';
+
+        handle.style.left = percent;
+        handle.style.top = '50%';
+        handle.style.transform = 'translate(-50%, -50%)';
+        handle.style.width = '30px';
+        handle.style.height = '30px';
+        document.getElementById('handle-icon').textContent = '⇄';
+      } else {
+        // 横分割 (上下スライダー): 下が画像B
+        imgB.style.clipPath = `polygon(0 ${percent}, 100% ${percent}, 100% 100%, 0 100%)`;
+        
+        line.className = "absolute bg-white dark:bg-neutral-400 pointer-events-none shadow-sm";
+        line.style.top = percent;
+        line.style.left = '0';
+        line.style.height = '1px';
+        line.style.width = '100%';
+        line.style.transform = 'translateY(-50%)';
+
+        handle.style.top = percent;
+        handle.style.left = '50%';
+        handle.style.transform = 'translate(-50%, -50%)';
+        handle.style.width = '30px';
+        handle.style.height = '30px';
+        document.getElementById('handle-icon').textContent = '⇅';
+      }
+    }
+
+    // 分割方向設定
+    function setOrientation(value) {
+      orientation = value;
+      
+      const btnV = document.getElementById('btn-vertical');
+      const btnH = document.getElementById('btn-horizontal');
+      const activeClass = ['bg-neutral-900', 'text-white', 'dark:bg-white', 'dark:text-neutral-950'];
+      const inactiveClass = ['bg-neutral-100', 'text-neutral-700', 'dark:bg-neutral-800', 'dark:text-neutral-300', 'hover:bg-neutral-200', 'dark:hover:bg-neutral-700'];
+
+      if (value === 'vertical') {
+        btnV.classList.add(...activeClass);
+        btnV.classList.remove(...inactiveClass);
+        btnH.classList.remove(...activeClass);
+        btnH.classList.add(...inactiveClass);
+      } else {
+        btnH.classList.add(...activeClass);
+        btnH.classList.remove(...inactiveClass);
+        btnV.classList.remove(...activeClass);
+        btnV.classList.add(...inactiveClass);
+      }
+
+      updateLabelText();
+      setSliderPosition(currentPos);
+    }
+
+    // 下部ラベルテキスト更新
+    function updateLabelText() {
+      const label = document.getElementById('direction-label');
+      if (orientation === 'vertical') {
+        label.innerHTML = `<span>← 画像 A (左)</span><span>画像 B (右) →</span>`;
+      } else {
+        label.innerHTML = `<span>↑ 画像 A (上)</span><span>画像 B (下) ↓</span>`;
+      }
+    }
+
+    // フィットモードトグル
+    function toggleFitMode() {
+      fitMode = fitMode === 'cover' ? 'contain' : 'cover';
+      const btn = document.getElementById('btn-fit');
+      
+      if (fitMode === 'cover') {
+        btn.innerHTML = `
+          <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+          </svg>
+          <span>カバー</span>
+        `;
+      } else {
+        btn.innerHTML = `
+          <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/>
+          </svg>
+          <span>全体表示</span>
+        `;
+      }
+      
+      updateCompareView();
+    }
+
+    // スライダーのドラッグハンドラ
+    function initCompareSlider() {
+      const container = document.getElementById('compare-container');
+      let isDragging = false;
+
+      const updatePosition = (e) => {
+        const rect = container.getBoundingClientRect();
+        let pos = 0;
+        
+        if (orientation === 'vertical') {
+          const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+          const x = clientX - rect.left;
+          pos = Math.max(0, Math.min(x / rect.width, 1));
+        } else {
+          const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+          const y = clientY - rect.top;
+          pos = Math.max(0, Math.min(y / rect.height, 1));
+        }
+        setSliderPosition(pos);
+      };
+
+      const startDrag = (e) => {
+        isDragging = true;
+        container.setPointerCapture(e.pointerId);
+        updatePosition(e);
+      };
+
+      const doDrag = (e) => {
+        if (!isDragging) return;
+        updatePosition(e);
+      };
+
+      const stopDrag = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        container.releasePointerCapture(e.pointerId);
+      };
+
+      container.addEventListener('pointerdown', startDrag);
+      container.addEventListener('pointermove', doDrag);
+      container.addEventListener('pointerup', stopDrag);
+      container.addEventListener('pointercancel', stopDrag);
+    }
+  </script>
+</body>
+</html>
