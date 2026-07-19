@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Walking Calc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media'
+        }
+    </script>
+    <style>
+        /* スクロールバーのシンプルなカスタマイズ */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- ヘッダー -->
+    <header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+            <!-- 左側：ロゴとタイトル -->
+            <div class="flex items-center gap-3">
+                <a href="/" class="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 hover:opacity-80 transition-opacity">
+                    <!-- シンプルなホーム・ツールアイコン -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                    <span>Tools</span>
+                </a>
+                <span class="text-slate-300 dark:text-slate-700 font-light">|</span>
+                <span class="font-semibold text-slate-900 dark:text-slate-100">Walking Calc</span>
+            </div>
+
+            <!-- 右側：外部リンク -->
+            <div class="flex items-center gap-4">
+                <!-- X (Twitter) Link -->
+                <a href="https://x.com/zakuro9715" target="_blank" rel="noopener noreferrer" class="text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors" aria-label="X (formerly Twitter)">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+                <!-- GitHub Link -->
+                <a href="https://github.com/zakuro9715/tools.za.kuro.red" target="_blank" rel="noopener noreferrer" class="text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors" aria-label="GitHub">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.48.0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.137 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-8 space-y-8">
+        
+        <!-- 計算機能セクション -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- 1.1 相互変換 -->
+            <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5">
+                <h2 class="text-base font-bold mb-4 flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-slate-900 dark:bg-slate-100 rounded-full"></span>
+                    速度・ペース 相互変換
+                </h2>
+                
+                <div class="space-y-4">
+                    <!-- 時速 (km/h) -->
+                    <div>
+                        <label for="conv-speed" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">時速 (km/h)</label>
+                        <div class="relative flex items-center">
+                            <input type="number" id="conv-speed" step="0.1" min="0.1" placeholder="6.0" 
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                            <span class="absolute right-3 text-xs text-slate-400">km/h</span>
+                        </div>
+                    </div>
+
+                    <!-- 相互変換矢印 -->
+                    <div class="flex justify-center py-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-slate-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                        </svg>
+                    </div>
+
+                    <!-- ペース (分:秒/km) -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">ペース (1kmあたり)</label>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1 flex items-center">
+                                <input type="number" id="conv-pace-min" min="0" placeholder="10" 
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm text-right focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                                <span class="absolute right-3 text-xs text-slate-400">分</span>
+                            </div>
+                            <span class="text-slate-400">:</span>
+                            <div class="relative flex-1 flex items-center">
+                                <input type="number" id="conv-pace-sec" min="0" max="59" placeholder="00" 
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm text-right focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                                <span class="absolute right-3 text-xs text-slate-400">秒</span>
+                            </div>
+                            <span class="text-xs text-slate-400 whitespace-nowrap">/km</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 1.2 穴埋め計算 -->
+            <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-base font-bold flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-slate-900 dark:bg-slate-100 rounded-full"></span>
+                        ペース・距離・時間 穴埋め
+                    </h2>
+                    <button id="clear-calc" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">クリア</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- 距離 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label for="calc-dist" class="text-xs font-medium text-slate-500 dark:text-slate-400">距離 (km)</label>
+                            <span id="indicator-dist" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 transition-colors">未入力</span>
+                        </div>
+                        <div class="relative flex items-center">
+                            <input type="number" id="calc-dist" step="0.01" min="0" placeholder="5.00" 
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                            <span class="absolute right-3 text-xs text-slate-400">km</span>
+                        </div>
+                    </div>
+
+                    <!-- ペース -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-medium text-slate-500 dark:text-slate-400">ペース</label>
+                            <span id="indicator-pace" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 transition-colors">未入力</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1 flex items-center">
+                                <input type="number" id="calc-pace-min" min="0" placeholder="10" 
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm text-right focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                                <span class="absolute right-3 text-xs text-slate-400">分</span>
+                            </div>
+                            <span class="text-slate-400">:</span>
+                            <div class="relative flex-1 flex items-center">
+                                <input type="number" id="calc-pace-sec" min="0" max="59" placeholder="00" 
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm text-right focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                                <span class="absolute right-3 text-xs text-slate-400">秒</span>
+                            </div>
+                            <span class="text-xs text-slate-400 whitespace-nowrap">/km</span>
+                        </div>
+                    </div>
+
+                    <!-- 時間 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-medium text-slate-500 dark:text-slate-400">時間</label>
+                            <span id="indicator-time" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 transition-colors">未入力</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="relative flex-1 flex items-center">
+                                <input type="number" id="calc-time-hr" min="0" placeholder="0" 
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-2 text-sm text-right focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                                <span class="absolute right-2 text-[10px] text-slate-400 font-normal">時間</span>
+                            </div>
+                            <span class="text-slate-400">:</span>
+                            <div class="relative flex-1 flex items-center">
+                                <input type="number" id="calc-time-min" min="0" max="59" placeholder="50" 
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-2 text-sm text-right focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                                <span class="absolute right-2 text-[10px] text-slate-400 font-normal">分</span>
+                            </div>
+                            <span class="text-slate-400">:</span>
+                            <div class="relative flex-1 flex items-center">
+                                <input type="number" id="calc-time-sec" min="0" max="59" placeholder="00" 
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-2 text-sm text-right focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors">
+                                <span class="absolute right-2 text-[10px] text-slate-400 font-normal">秒</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 2. 対応表 -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5">
+            <h2 class="text-base font-bold mb-4 flex items-center gap-2">
+                <span class="w-1.5 h-4 bg-slate-900 dark:bg-slate-100 rounded-full"></span>
+                速度・ペース対応表 (2.0km/h 〜 12.0km/h)
+            </h2>
+            
+            <div class="overflow-x-auto max-h-[400px] border border-slate-100 dark:border-slate-800 rounded">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="bg-slate-50 dark:bg-slate-950 sticky top-0 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                            <th class="px-6 py-3 font-medium">速度 (km/h)</th>
+                            <th class="px-6 py-3 font-medium">ペース (/km)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- JSで動的に追加 -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 mt-auto">
+        <div class="max-w-4xl mx-auto px-4 text-center text-xs text-slate-400 dark:text-slate-500">
+            <a href="/" class="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                &copy; 2026 zakuro. All rights reserved.
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // DOMの読み込み完了後に動作開始
+        document.addEventListener('DOMContentLoaded', () => {
+            initConversion();
+            initCalculator();
+            generatePaceTable();
+        });
+
+        // ==========================================
+        // 1.1 相互変換機能
+        // ==========================================
+        function initConversion() {
+            const speedInput = document.getElementById('conv-speed');
+            const paceMinInput = document.getElementById('conv-pace-min');
+            const paceSecInput = document.getElementById('conv-pace-sec');
+
+            let isUpdating = false;
+
+            // 速度(km/h) -> ペース(分:秒/km)
+            speedInput.addEventListener('input', () => {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                const speed = parseFloat(speedInput.value);
+                if (isNaN(speed) || speed <= 0) {
+                    paceMinInput.value = '';
+                    paceSecInput.value = '';
+                    isUpdating = false;
+                    return;
+                }
+
+                const totalMinutes = 60 / speed;
+                const minutes = Math.floor(totalMinutes);
+                const seconds = Math.round((totalMinutes - minutes) * 60);
+
+                if (seconds === 60) {
+                    paceMinInput.value = minutes + 1;
+                    paceSecInput.value = '00';
+                } else {
+                    paceMinInput.value = minutes;
+                    paceSecInput.value = String(seconds).padStart(2, '0');
+                }
+                isUpdating = false;
+            });
+
+            // ペース(分:秒/km) -> 速度(km/h)
+            const convertPaceToSpeed = () => {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                const minutes = parseInt(paceMinInput.value, 10);
+                const seconds = parseInt(paceSecInput.value, 10) || 0;
+
+                if (isNaN(minutes) || minutes < 0 || seconds < 0 || seconds >= 60) {
+                    speedInput.value = '';
+                    isUpdating = false;
+                    return;
+                }
+
+                const totalMinutes = minutes + (seconds / 60);
+                if (totalMinutes === 0) {
+                    speedInput.value = '';
+                    isUpdating = false;
+                    return;
+                }
+
+                const speed = 60 / totalMinutes;
+                speedInput.value = speed.toFixed(2);
+                isUpdating = false;
+            };
+
+            paceMinInput.addEventListener('input', convertPaceToSpeed);
+            paceSecInput.addEventListener('input', convertPaceToSpeed);
+        }
+
+        // ==========================================
+        // 1.2 穴埋め計算機能
+        // ==========================================
+        function initCalculator() {
+            const distInput = document.getElementById('calc-dist');
+            const paceMinInput = document.getElementById('calc-pace-min');
+            const paceSecInput = document.getElementById('calc-pace-sec');
+            const timeHrInput = document.getElementById('calc-time-hr');
+            const timeMinInput = document.getElementById('calc-time-min');
+            const timeSecInput = document.getElementById('calc-time-sec');
+
+            const indDist = document.getElementById('indicator-dist');
+            const indPace = document.getElementById('indicator-pace');
+            const indTime = document.getElementById('indicator-time');
+
+            const clearBtn = document.getElementById('clear-calc');
+
+            // 入力履歴管理 (直近に変更された2つのパラメータをもとに、もう1つを算出)
+            // 'dist', 'pace', 'time' の順序で保持
+            let inputHistory = [];
+
+            // 各種要素が値を持っているかを判定
+            const hasDist = () => distInput.value !== '' && parseFloat(distInput.value) > 0;
+            const hasPace = () => paceMinInput.value !== '' && parseInt(paceMinInput.value, 10) >= 0;
+            const hasTime = () => {
+                const h = parseInt(timeHrInput.value, 10) || 0;
+                const m = parseInt(timeMinInput.value, 10) || 0;
+                const s = parseInt(timeSecInput.value, 10) || 0;
+                return (h > 0 || m > 0 || s > 0);
+            };
+
+            // 入力タイプを履歴の先頭に持ってくる/追加
+            function registerInput(type) {
+                inputHistory = inputHistory.filter(item => item !== type);
+                inputHistory.unshift(type);
+                if (inputHistory.length > 3) {
+                    inputHistory.pop();
+                }
+                updateIndicators();
+                calculateRemaining();
+            }
+
+            // インジケーターのバッジ表示を更新
+            function updateIndicators() {
+                // 状態定義
+                const states = {
+                    dist: 'unfilled',
+                    pace: 'unfilled',
+                    time: 'unfilled'
+                };
+
+                if (hasDist()) states.dist = 'inputted';
+                if (hasPace()) states.pace = 'inputted';
+                if (hasTime()) states.time = 'inputted';
+
+                // 計算対象(直近2つに選ばれていない、かつ他2つが入力されている場合)
+                if (inputHistory.length >= 2) {
+                    const active1 = inputHistory[0];
+                    const active2 = inputHistory[1];
+                    const allTypes = ['dist', 'pace', 'time'];
+                    const target = allTypes.find(t => t !== active1 && t !== active2);
+                    
+                    if (target && states[active1] === 'inputted' && states[active2] === 'inputted') {
+                        states[target] = 'calculated';
+                    }
+                }
+
+                // 反映
+                const applyStyle = (el, state) => {
+                    if (state === 'inputted') {
+                        el.textContent = '入力済';
+                        el.className = 'text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-100 dark:bg-slate-100 dark:text-slate-900 font-medium';
+                    } else if (state === 'calculated') {
+                        el.textContent = '自動計算';
+                        el.className = 'text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 font-semibold';
+                    } else {
+                        el.textContent = '未入力';
+                        el.className = 'text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500';
+                    }
+                };
+
+                applyStyle(indDist, states.dist);
+                applyStyle(indPace, states.pace);
+                applyStyle(indTime, states.time);
+            }
+
+            // 実際の穴埋め計算処理
+            function calculateRemaining() {
+                if (inputHistory.length < 2) return;
+
+                const primary = inputHistory[0];
+                const secondary = inputHistory[1];
+
+                // 1. ペース & 時間 から 「距離」を計算
+                if ((primary === 'pace' && secondary === 'time') || (primary === 'time' && secondary === 'pace')) {
+                    if (hasPace() && hasTime()) {
+                        const paceMins = parseInt(paceMinInput.value, 10) || 0;
+                        const paceSecs = parseInt(paceSecInput.value, 10) || 0;
+                        const paceInSeconds = (paceMins * 60) + paceSecs; // 1kmあたりの秒数
+
+                        const timeHrs = parseInt(timeHrInput.value, 10) || 0;
+                        const timeMins = parseInt(timeMinInput.value, 10) || 0;
+                        const timeSecs = parseInt(timeSecInput.value, 10) || 0;
+                        const totalTimeSeconds = (timeHrs * 3600) + (timeMins * 60) + timeSecs;
+
+                        if (paceInSeconds > 0) {
+                            const calculatedDist = totalTimeSeconds / paceInSeconds;
+                            distInput.value = calculatedDist.toFixed(2);
+                        }
+                    }
+                }
+
+                // 2. 距離 & 時間 から 「ペース」を計算
+                else if ((primary === 'dist' && secondary === 'time') || (primary === 'time' && secondary === 'dist')) {
+                    if (hasDist() && hasTime()) {
+                        const dist = parseFloat(distInput.value);
+                        
+                        const timeHrs = parseInt(timeHrInput.value, 10) || 0;
+                        const timeMins = parseInt(timeMinInput.value, 10) || 0;
+                        const timeSecs = parseInt(timeSecInput.value, 10) || 0;
+                        const totalTimeSeconds = (timeHrs * 3600) + (timeMins * 60) + timeSecs;
+
+                        if (dist > 0) {
+                            const paceSecondsPerKm = totalTimeSeconds / dist;
+                            const calculatedPaceMin = Math.floor(paceSecondsPerKm / 60);
+                            const calculatedPaceSec = Math.round(paceSecondsPerKm % 60);
+
+                            if (calculatedPaceSec === 60) {
+                                paceMinInput.value = calculatedPaceMin + 1;
+                                paceSecInput.value = '00';
+                            } else {
+                                paceMinInput.value = calculatedPaceMin;
+                                paceSecInput.value = String(calculatedPaceSec).padStart(2, '0');
+                            }
+                        }
+                    }
+                }
+
+                // 3. 距離 & ペース から 「時間」を計算
+                else if ((primary === 'dist' && secondary === 'pace') || (primary === 'pace' && secondary === 'dist')) {
+                    if (hasDist() && hasPace()) {
+                        const dist = parseFloat(distInput.value);
+                        
+                        const paceMins = parseInt(paceMinInput.value, 10) || 0;
+                        const paceSecs = parseInt(paceSecInput.value, 10) || 0;
+                        const paceInSeconds = (paceMins * 60) + paceSecs;
+
+                        const totalTimeSeconds = dist * paceInSeconds;
+
+                        const calculatedHrs = Math.floor(totalTimeSeconds / 3600);
+                        const calculatedMins = Math.floor((totalTimeSeconds % 3600) / 60);
+                        const calculatedSecs = Math.round(totalTimeSeconds % 60);
+
+                        timeHrInput.value = calculatedHrs;
+                        timeMinInput.value = calculatedMins;
+                        timeSecInput.value = String(calculatedSecs).padStart(2, '0');
+                    }
+                }
+            }
+
+            // イベントリスナー登録
+            distInput.addEventListener('input', () => registerInput('dist'));
+            
+            const handlePaceInput = () => registerInput('pace');
+            paceMinInput.addEventListener('input', handlePaceInput);
+            paceSecInput.addEventListener('input', handlePaceInput);
+
+            const handleTimeInput = () => registerInput('time');
+            timeHrInput.addEventListener('input', handleTimeInput);
+            timeMinInput.addEventListener('input', handleTimeInput);
+            timeSecInput.addEventListener('input', handleTimeInput);
+
+            // クリアボタンの動作
+            clearBtn.addEventListener('click', () => {
+                distInput.value = '';
+                paceMinInput.value = '';
+                paceSecInput.value = '';
+                timeHrInput.value = '';
+                timeMinInput.value = '';
+                timeSecInput.value = '';
+                inputHistory = [];
+                updateIndicators();
+            });
+        }
+
+        // ==========================================
+        // 2. 速度・ペース対応表 自動作成 (2.0km/h 〜 12.0km/h)
+        // ==========================================
+        function generatePaceTable() {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = ''; // クリア
+
+            // 歩行・軽いジョグ用の速度レンジ (2.0km/h から 12.0km/h、0.5km/h 刻み)
+            for (let speed = 2.0; speed <= 12.0; speed += 0.5) {
+                const totalMinutes = 60 / speed;
+                const minutes = Math.floor(totalMinutes);
+                const seconds = Math.round((totalMinutes - minutes) * 60);
+
+                let paceStr = '';
+                if (seconds === 60) {
+                    paceStr = `${minutes + 1}:00`;
+                } else {
+                    paceStr = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors';
+                tr.innerHTML = `
+                    <td class="px-6 py-3 font-medium">${speed.toFixed(1)} km/h</td>
+                    <td class="px-6 py-3 text-slate-500 dark:text-slate-400">${paceStr} /km</td>
+                `;
+                tableBody.appendChild(tr);
+            }
+        }
+    </script>
+</body>
+</html>
