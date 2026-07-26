@@ -20,3 +20,11 @@ AI links are private
 [gem.md](gem.md) is instructions text that used to generate each apps of this site.
 
 https://gemini.google.com/gem/1t1s_5edgD1RrgRldR_U6DjHiNwWyYyIe?usp=sharing
+
+## Generate OG Images
+
+Require Inkscape
+
+```
+make og-images
+```
