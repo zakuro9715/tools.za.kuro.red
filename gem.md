@@ -33,8 +33,30 @@
 
 内容を更新した場合、Copyrightの<year>も更新する。2025のファイルを2026年になってから編集した場合は、`2026-2026` と変更する 
 
-### OGP画像
+### メタタグとOGP
 
-#### 埋め込み
+以下のテンプレートを参考にして、メタタグを埋め込む。
 
-OGPを追加する指示があった場合は、各SNSに対応できるように作成する。イメージのURLは指定されたものを使用
+このテンプレートは、「Hello App」というサンプルの場合を表す
+
+- title はそのまま埋める
+- url は単語を小文字にしてハイフンで繋ぐ
+- ogp 画像は空白を削除する以外はタイトルそのままのファイル名
+
+```
+<link rel="shortcut icon" href="/favicon.ico">
+<meta name="description" content="Sample app">
+<meta property="og:title" content="Hello App">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tools.za.kuro.red/hello-app.html">
+<meta property="og:image" content="https://tools.za.kuro.red/og-images/HelloApp.png">
+<meta property="og:site_name" content="tools.za.kuro.red">
+<meta property="og:description" content="Sample app">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:title" content="Hello App">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@zakuro9715">
+<meta name="twitter:url" content="https://tools.za.kuro.red/hello-app.html">
+<meta name="twitter:image" content="https://tools.za.kuro.red/og-images/HelloApp.png">
+<meta name="twitter:description" content="Sample app">
+```
