@@ -14,7 +14,8 @@
     "lint:oxlint": "vp lint . --fix",
     "lint:eslint": "vp lint . --fix",
     "format": "vp fmt src/",
-    "prepare": "vp config"
+    "prepare": "vp config",
+    "skills": "skills"
   },
   "dependencies": {
     "vue": "^3.5.40",
@@ -30,6 +31,7 @@
     "jiti": "^2.7.0",
     "jsdom": "^29.1.1",
     "npm-run-all2": "^9.0.2",
+    "skills": "^1.5.21",
     "typescript": "~6.0.0",
     "vite": "catalog:",
     "vite-plugin-vue-devtools": "^8.1.5",
