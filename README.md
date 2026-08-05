@@ -14,6 +14,7 @@ AI links are private
 - X Mobile URL ([AI](https://gemini.google.com/app/ec33105a1cf23773)): Convert X URL to Mobile URL
 - YouTube URL ([AI](https://gemini.google.com/app/a507dc7ffffe9901)): Normalize YouTube URL
 - Walking Calc ([AI](https://gemini.google.com/app/7fe59e8827f0c21b)): Calculator for walking
+- Metwork Info Checker ([AI](https://gemini.google.com/gem/78ad83b86602/e9b9806e218a4e80)): Check network info
 
 ## Gem
 

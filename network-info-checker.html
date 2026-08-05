@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ネットワーク情報チェッカー</title>
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta name="description" content="ネットワーク接続情報（IP、Ping、回線速度、オンライン状態）を確認できるシンプルツール。">
+  <meta property="og:title" content="ネットワーク情報チェッカー">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tools.za.kuro.red/network-info-checker.html">
+  <meta property="og:image" content="https://tools.za.kuro.red/og-images/NetworkInfoChecker.png">
+  <meta property="og:site_name" content="tools.za.kuro.red">
+  <meta property="og:description" content="ネットワーク接続情報（IP、Ping、回線速度、オンライン状態）を確認できるシンプルツール。">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:title" content="ネットワーク情報チェッカー">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@zakuro9715">
+  <meta name="twitter:url" content="https://tools.za.kuro.red/network-info-checker.html">
+  <meta name="twitter:image" content="https://tools.za.kuro.red/og-images/NetworkInfoChecker.png">
+  <meta name="twitter:description" content="ネットワーク接続情報（IP、Ping、回線速度、オンライン状態）を確認できるシンプルツール。">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <!-- Left Header -->
+      <div class="flex items-center space-x-2 text-sm font-medium">
+        <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
+          <!-- Home Icon -->
+          <svg class="w-4 h-4 mr-1 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          Tools
+        </a>
+        <span class="text-slate-400 dark:text-slate-600">|</span>
+        <span class="font-bold text-slate-900 dark:text-white">ネットワーク情報チェッカー</span>
+      </div>
+
+      <!-- Right Header -->
+      <div class="flex items-center space-x-4">
+        <!-- X Link -->
+        <a href="https://x.com/zakuro9715" target="_blank" rel="noopener noreferrer" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" aria-label="X">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <!-- GitHub Link -->
+        <a href="https://github.com/zakuro9715/tools.za.kuro.red" target="_blank" rel="noopener noreferrer" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" aria-label="GitHub">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-4xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- Status Overview -->
+    <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ステータス</span>
+          <div class="flex items-center space-x-3 mt-1">
+            <span id="status-indicator" class="w-3.5 h-3.5 rounded-full bg-slate-300"></span>
+            <h1 id="status-text" class="text-2xl font-bold text-slate-900 dark:text-white">確認中...</h1>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ping</span>
+          <p id="ping-text" class="text-2xl font-mono font-bold text-slate-900 dark:text-white">-- ms</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <!-- Public IP Info -->
+      <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-5">
+        <h2 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">パブリックIP</h2>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between border-b border-slate-100 dark:border-slate-900 pb-2">
+            <span class="text-slate-500 dark:text-slate-400">IPアドレス</span>
+            <span id="ip-address" class="font-mono font-medium text-slate-800 dark:text-slate-200">取得中...</span>
+          </div>
+          <div class="flex justify-between border-b border-slate-100 dark:border-slate-900 pb-2">
+            <span class="text-slate-500 dark:text-slate-400">プロバイダ / ISP</span>
+            <span id="ip-isp" class="font-medium text-slate-800 dark:text-slate-200">取得中...</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500 dark:text-slate-400">国 / 地域</span>
+            <span id="ip-location" class="font-medium text-slate-800 dark:text-slate-200">取得中...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network API Info -->
+      <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-5">
+        <h2 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">回線情報 (推定)</h2>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between border-b border-slate-100 dark:border-slate-900 pb-2">
+            <span class="text-slate-500 dark:text-slate-400">接続タイプ</span>
+            <span id="net-type" class="font-medium text-slate-800 dark:text-slate-200">--</span>
+          </div>
+          <div class="flex justify-between border-b border-slate-100 dark:border-slate-900 pb-2">
+            <span class="text-slate-500 dark:text-slate-400">推定下り速度</span>
+            <span id="net-downlink" class="font-mono font-medium text-slate-800 dark:text-slate-200">-- Mbps</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500 dark:text-slate-400">データ節約モード</span>
+            <span id="net-savedata" class="font-medium text-slate-800 dark:text-slate-200">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Browser / Device Info -->
+      <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-5 md:col-span-2">
+        <h2 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">環境情報</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <div class="flex justify-between border-b border-slate-100 dark:border-slate-900 pb-2 sm:border-b-0">
+            <span class="text-slate-500 dark:text-slate-400">言語</span>
+            <span id="env-lang" class="font-medium text-slate-800 dark:text-slate-200">--</span>
+          </div>
+          <div class="flex justify-between border-b border-slate-100 dark:border-slate-900 pb-2">
+            <span class="text-slate-500 dark:text-slate-400">画面解像度</span>
+            <span id="env-screen" class="font-mono font-medium text-slate-800 dark:text-slate-200">--</span>
+          </div>
+          <div class="flex justify-between sm:col-span-2 pt-1">
+            <span class="text-slate-500 dark:text-slate-400 mr-2 shrink-0">User Agent</span>
+            <span id="env-ua" class="font-mono text-xs text-slate-600 dark:text-slate-400 truncate">--</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-4 px-4 text-center text-xs text-slate-500 dark:text-slate-400">
+    &copy; 2026 zakuro. All rights reserved.
+  </footer>
+
+  <!-- Script Section -->
+  <script>
+    // --- Elements ---
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const pingText = document.getElementById('ping-text');
+
+    const ipAddress = document.getElementById('ip-address');
+    const ipIsp = document.getElementById('ip-isp');
+    const ipLocation = document.getElementById('ip-location');
+
+    const netType = document.getElementById('net-type');
+    const netDownlink = document.getElementById('net-downlink');
+    const netSaveData = document.getElementById('net-savedata');
+
+    const envLang = document.getElementById('env-lang');
+    const envScreen = document.getElementById('env-screen');
+    const envUa = document.getElementById('env-ua');
+
+    // --- Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+      const swContent = `
+        self.addEventListener('install', (e) => self.skipWaiting());
+        self.addEventListener('activate', (e) => self.clients.claim());
+        self.addEventListener('fetch', (e) => {
+          e.respondWith(fetch(e.request).catch(() => new Response('Offline')));
+        });
+      `;
+      const blob = new Blob([swContent], { type: 'text/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+    }
+
+    // --- Environment Data ---
+    envLang.textContent = navigator.language || '--';
+    envScreen.textContent = `${window.screen.width} x ${window.screen.height}`;
+    envUa.textContent = navigator.userAgent;
+
+    // --- Network Information API ---
+    function updateNetworkConnection() {
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (conn) {
+        netType.textContent = (conn.effectiveType || '--').toUpperCase();
+        netDownlink.textContent = conn.downlink ? `${conn.downlink} Mbps` : '--';
+        netSaveData.textContent = conn.saveData ? 'ON' : 'OFF';
+      } else {
+        netType.textContent = '非対応';
+        netDownlink.textContent = '非対応';
+        netSaveData.textContent = '非対応';
+      }
+    }
+
+    // --- Public IP & Details Fetch ---
+    async function fetchPublicIP() {
+      let clientIp = '';
+
+      // 1. IPAddress 取得 (ipify API)
+      try {
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        if (ipRes.ok) {
+          const ipData = await ipRes.json();
+          clientIp = ipData.ip;
+          ipAddress.textContent = clientIp;
+        }
+      } catch (e) {
+        ipAddress.textContent = '取得失敗';
+      }
+
+      // 2. IPから詳細情報(ISP/位置)を取得 (ipwho.is 経由)
+      if (clientIp) {
+        try {
+          const infoRes = await fetch(`https://ipwho.is/${clientIp}`);
+          if (infoRes.ok) {
+            const infoData = await infoRes.json();
+            if (infoData.success !== false) {
+              ipIsp.textContent = infoData.connection?.isp || infoData.connection?.org || '--';
+              ipLocation.textContent = (infoData.city && infoData.country)
+                ? `${infoData.city}, ${infoData.country}`
+                : (infoData.country || '--');
+              return;
+            }
+          }
+        } catch (e) {
+          // フォールバック失敗時は既存表示をそのままに
+        }
+      }
+
+      ipIsp.textContent = '--';
+      ipLocation.textContent = '--';
+    }
+
+    // --- Ping & Online Status Checker ---
+    async function checkPingAndStatus() {
+      const isOnline = navigator.onLine;
+
+      if (!isOnline) {
+        statusIndicator.className = 'w-3.5 h-3.5 rounded-full bg-red-500';
+        statusText.textContent = 'オフライン';
+        pingText.textContent = '-- ms';
+        return;
+      }
+
+      const startTime = performance.now();
+      try {
+        await fetch('https://www.cloudflare.com/cdn-cgi/trace?cache=' + Date.now(), {
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-store'
+        });
+        const duration = Math.round(performance.now() - startTime);
+
+        statusIndicator.className = 'w-3.5 h-3.5 rounded-full bg-emerald-500';
+        statusText.textContent = 'オンライン';
+        pingText.textContent = `${duration} ms`;
+      } catch (err) {
+        statusIndicator.className = 'w-3.5 h-3.5 rounded-full bg-amber-500';
+        statusText.textContent = '接続エラー';
+        pingText.textContent = '-- ms';
+      }
+    }
+
+    // --- Event Listeners & Timers ---
+    window.addEventListener('online', () => {
+      checkPingAndStatus();
+      fetchPublicIP();
+    });
+    window.addEventListener('offline', checkPingAndStatus);
+
+    if (navigator.connection) {
+      navigator.connection.addEventListener('change', updateNetworkConnection);
+    }
+
+    // Init
+    updateNetworkConnection();
+    fetchPublicIP();
+    checkPingAndStatus();
+
+    // 1秒ごとの自動更新
+    setInterval(checkPingAndStatus, 1000);
+  </script>
+</body>
+</html>

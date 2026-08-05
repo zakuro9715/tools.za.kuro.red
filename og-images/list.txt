@@ -8,3 +8,4 @@ ImageResize
 X Mobile URL
 YouTube URL
 WalkingCalc
+NetworkInfoChecker
