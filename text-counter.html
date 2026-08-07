@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>テキストカウンター</title>
+
+  <!-- Meta & OGP -->
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta name="description" content="テキストの文字数、行数、原稿用紙換算枚数、文庫本ページ数、読了時間などをリアルタイムで計測するシンプルなテキストカウンターツールです。">
+  <meta property="og:title" content="テキストカウンター">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tools.za.kuro.red/text-counter.html">
+  <meta property="og:image" content="https://tools.za.kuro.red/og-images/TextCounter.png">
+  <meta property="og:site_name" content="tools.za.kuro.red">
+  <meta property="og:description" content="テキストの文字数、行数、原稿用紙換算枚数、文庫本ページ数、読了時間などをリアルタイムで計測するシンプルなテキストカウンターツールです。">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:title" content="テキストカウンター">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@zakuro9715">
+  <meta name="twitter:url" content="https://tools.za.kuro.red/text-counter.html">
+  <meta name="twitter:image" content="https://tools.za.kuro.red/og-images/TextCounter.png">
+  <meta name="twitter:description" content="テキストの文字数、行数、原稿用紙換算枚数、文庫本ページ数、読了時間などをリアルタイムで計測するシンプルなテキストカウンターツールです。">
+
+  <!-- Tailwind CSS, Vue 3 & VueUse via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+    }
+  </script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/@vueuse/shared"></script>
+  <script src="https://unpkg.com/@vueuse/core"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+  <div id="app" class="flex flex-col min-h-screen">
+    
+    <!-- Header -->
+    <header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3">
+      <div class="max-w-5xl mx-auto flex items-center justify-between">
+        <div class="flex items-center space-x-2 text-sm sm:text-base">
+          <a href="/" class="flex items-center space-x-1 font-bold hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            <span>Tools</span>
+          </a>
+          <span class="text-slate-400 dark:text-slate-600">|</span>
+          <span class="font-medium">テキストカウンター</span>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <!-- X Link -->
+          <a href="https://x.com/zakuro9715" target="_blank" rel="noopener noreferrer" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 transition-colors" aria-label="X">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+          <!-- GitHub Link -->
+          <a href="https://github.com/zakuro9715/tools.za.kuro.red" target="_blank" rel="noopener noreferrer" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 transition-colors" aria-label="GitHub">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 space-y-6">
+      
+      <!-- Text Area Container -->
+      <div class="space-y-2">
+        <div class="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+          <span>テキストを入力またはペースト</span>
+          <div class="flex items-center space-x-2">
+            <button 
+              @click="pasteText" 
+              class="px-2.5 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors flex items-center space-x-1 shadow-sm font-medium"
+              title="クリップボードから貼り付け"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              <span>貼り付け</span>
+            </button>
+            <button 
+              @click="clearText" 
+              v-if="text.length > 0"
+              class="px-2.5 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors flex items-center space-x-1 shadow-sm font-medium"
+              title="テキストをクリア"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              <span>クリア</span>
+            </button>
+          </div>
+        </div>
+        <textarea
+          v-model="text"
+          placeholder="ここにテキストを入力してください..."
+          rows="10"
+          class="w-full p-4 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600 resize-y text-base font-sans"
+        ></textarea>
+      </div>
+
+      <!-- Counter Metrics Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        
+        <!-- 文字数（空白込み） -->
+        <div class="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-md">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">文字数（空白込み）</div>
+          <div class="text-2xl font-bold tracking-tight">{{ stats.charCountWithSpaces.toLocaleString() }}</div>
+        </div>
+
+        <!-- 文字数（空白除く） -->
+        <div class="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-md">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">文字数</div>
+          <div class="text-2xl font-bold tracking-tight">{{ stats.charCountWithoutSpaces.toLocaleString() }}</div>
+        </div>
+
+        <!-- 行数（空白込み） -->
+        <div class="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-md">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">行数（空白込み）</div>
+          <div class="text-2xl font-bold tracking-tight">{{ stats.lineCountWithEmpty.toLocaleString() }}</div>
+        </div>
+
+        <!-- 空白行数 -->
+        <div class="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-md">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">空白行数</div>
+          <div class="text-2xl font-bold tracking-tight">{{ stats.emptyLineCount.toLocaleString() }}</div>
+        </div>
+
+        <!-- 1行最大文字数 -->
+        <div class="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-md">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">1行最大文字数</div>
+          <div class="text-2xl font-bold tracking-tight">{{ stats.maxLineLength.toLocaleString() }}</div>
+        </div>
+
+        <!-- 原稿用紙換算枚数 -->
+        <div class="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-md">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">原稿用紙換算</div>
+          <div class="text-2xl font-bold tracking-tight">
+            {{ stats.manuscriptPages.toLocaleString() }}
+            <span class="text-xs font-normal text-slate-500">枚</span>
+          </div>
+        </div>
+
+        <!-- 文庫本ページ数 -->
+        <div class="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-md">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">文庫本 (約600字/P)</div>
+          <div class="text-2xl font-bold tracking-tight">
+            {{ stats.bookPages.toLocaleString() }}
+            <span class="text-xs font-normal text-slate-500">ページ</span>
+          </div>
+        </div>
+
+        <!-- 推定読了時間 -->
+        <div class="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-md">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">読了時間 (400字/分)</div>
+          <div class="text-2xl font-bold tracking-tight">
+            {{ stats.readingTime }}
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+      &copy; 2026 zakuro. All rights reserved.
+    </footer>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+    const { refDebounced } = VueUse;
+
+    createApp({
+      setup() {
+        const text = ref('');
+        // VueUse の refDebounced を利用して 200ms のデバウンス処理
+        const debouncedText = refDebounced(text, 200);
+
+        const pasteText = async () => {
+          try {
+            const clipText = await navigator.clipboard.readText();
+            text.value = clipText;
+          } catch (err) {
+            console.error('クリップボードからの読み込みに失敗しました:', err);
+          }
+        };
+
+        const clearText = () => {
+          text.value = '';
+        };
+
+        const stats = computed(() => {
+          const val = debouncedText.value;
+          
+          if (!val) {
+            return {
+              charCountWithSpaces: 0,
+              charCountWithoutSpaces: 0,
+              lineCountWithEmpty: 0,
+              emptyLineCount: 0,
+              maxLineLength: 0,
+              manuscriptPages: 0,
+              bookPages: 0,
+              readingTime: '0分'
+            };
+          }
+
+          // 改行コードの統一
+          const normalized = val.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+          
+          // サロゲートペア・絵文字を正しく分解して配列化
+          const charsWithSpaces = [...normalized];
+          
+          // 空白・改行を除く文字
+          const charsWithoutSpaces = [...normalized.replace(/\s/g, '')];
+
+          // 行分割
+          const lines = normalized.split('\n');
+          const lineCountWithEmpty = lines.length;
+          
+          // 空白行のカウント (空白文字のみの行も空白行とみなす)
+          const emptyLineCount = lines.filter(line => line.trim() === '').length;
+
+          // 1行最大文字数 (各行の文字数を配列分解して測定)
+          let maxLineLength = 0;
+          let manuscriptLinesTotal = 0;
+
+          lines.forEach(line => {
+            const lineLength = [...line].length;
+            if (lineLength > maxLineLength) {
+              maxLineLength = lineLength;
+            }
+
+            // 原稿用紙換算用: 1行20文字換算 (空行も1行として計算)
+            const genkoLine = Math.ceil(lineLength / 20) || 1;
+            manuscriptLinesTotal += genkoLine;
+          });
+
+          // 原稿用紙換算枚数 (20行で1枚 = 400文字詰め)
+          const manuscriptPages = Math.ceil(manuscriptLinesTotal / 20);
+
+          // 文庫本ページ数 (一般的に1ページ約600文字で計算)
+          const bookPages = Math.ceil(charsWithSpaces.length / 600);
+
+          // 推定読了時間 (400文字/分、秒を四捨五入して分単位に換算)
+          const minutes = Math.round(charsWithSpaces.length / 400);
+          const readingTime = `約${minutes}分`;
+
+          return {
+            charCountWithSpaces: charsWithSpaces.length,
+            charCountWithoutSpaces: charsWithoutSpaces.length,
+            lineCountWithEmpty,
+            emptyLineCount,
+            maxLineLength,
+            manuscriptPages,
+            bookPages,
+            readingTime
+          };
+        });
+
+        return {
+          text,
+          pasteText,
+          clearText,
+          stats
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
