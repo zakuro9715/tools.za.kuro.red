@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notepad | Tools</title>
+
+    <!-- Meta & OGP -->
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="description" content="シンプルなメモ帳アプリ">
+    <meta property="og:title" content="Notepad">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tools.za.kuro.red/notepad.html">
+    <meta property="og:image" content="https://tools.za.kuro.red/og-images/Notepad.png">
+    <meta property="og:site_name" content="tools.za.kuro.red">
+    <meta property="og:description" content="シンプルなメモ帳アプリ">
+    <meta property="og:locale" content="ja_JP">
+    <meta name="twitter:title" content="Notepad">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@zakuro9715">
+    <meta name="twitter:url" content="https://tools.za.kuro.red/notepad.html">
+    <meta name="twitter:image" content="https://tools.za.kuro.red/og-images/Notepad.png">
+    <meta name="twitter:description" content="シンプルなメモ帳アプリ">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Dark Mode Initializer -->
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col min-h-screen font-sans transition-colors duration-150">
+
+    <div id="app" class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="/" class="flex items-center space-x-1.5 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="font-bold tracking-tight">Tools</span>
+                </a>
+                <span class="text-gray-300 dark:text-gray-700">|</span>
+                <span class="font-medium text-gray-700 dark:text-gray-300">Notepad</span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Theme Toggle -->
+                <button @click="toggleTheme" class="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors" title="Toggle Theme">
+                    <svg v-if="isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                </button>
+
+                <!-- X Link -->
+                <a href="https://x.com/zakuro9715" target="_blank" rel="noopener noreferrer" class="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors" title="X">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+
+                <!-- GitHub Link -->
+                <a href="https://github.com/zakuro9715/tools.za.kuro.red" target="_blank" rel="noopener noreferrer" class="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors" title="GitHub">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                    </svg>
+                </a>
+            </div>
+        </header>
+
+        <!-- Control Bar -->
+        <div class="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-4 py-2 flex items-center justify-between text-sm">
+            <div class="flex items-center space-x-2">
+                <button @click="createNewMemo" class="px-3 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded hover:opacity-90 transition-opacity font-medium">
+                    新規作成
+                </button>
+                <button @click="saveMemo" class="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    保存
+                </button>
+                <span v-if="statusMessage" class="text-xs text-gray-500 dark:text-gray-400 ml-2 animate-fade-in">
+                    {{ statusMessage }}
+                </span>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button @click="showList = !showList" class="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center space-x-1">
+                    <span>一覧 ({{ memos.length }})</span>
+                </button>
+                <button v-if="memos.length > 0" @click="confirmClearAll" class="px-3 py-1.5 border border-red-300 dark:border-red-900 text-red-600 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                    全消去
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex relative overflow-hidden">
+            <!-- Textarea Area -->
+            <main class="flex-1 flex flex-col relative">
+                <!-- Clear Button -->
+                <button 
+                    v-if="currentContent"
+                    @click="clearCurrentContent"
+                    class="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-white/80 dark:bg-gray-900/80 backdrop-blur rounded transition-colors border border-gray-200/50 dark:border-gray-700/50 z-10"
+                    title="テキストをクリア"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <textarea
+                    v-model="currentContent"
+                    placeholder="ここにメモを入力..."
+                    class="w-full flex-1 p-4 pr-12 bg-transparent resize-none font-mono text-base focus:outline-none leading-relaxed"
+                ></textarea>
+            </main>
+
+            <!-- Memo List Sidebar/Drawer -->
+            <aside 
+                v-if="showList" 
+                class="w-80 border-l border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900 flex flex-col absolute right-0 top-0 bottom-0 md:relative z-10 shadow-lg md:shadow-none"
+            >
+                <div class="p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between font-medium text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <span>保存済みメモ</span>
+                    <button @click="showList = false" class="md:hidden text-gray-500 hover:text-gray-700">✕</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800/60">
+                    <div v-if="memos.length === 0" class="p-4 text-center text-xs text-gray-400">
+                        保存されたメモはありません
+                    </div>
+
+                    <div 
+                        v-for="memo in memos" 
+                        :key="memo.id"
+                        @click="selectMemo(memo.id)"
+                        :class="[
+                            'p-3 cursor-pointer transition-colors group flex items-start justify-between',
+                            currentId === memo.id ? 'bg-gray-200/60 dark:bg-gray-800 font-medium' : 'hover:bg-gray-100 dark:hover:bg-gray-800/40'
+                        ]"
+                    >
+                        <div class="flex-1 min-w-0 pr-2">
+                            <div class="text-sm truncate">
+                                {{ memo.title || '無題のメモ' }}
+                            </div>
+                            <div class="text-[10px] text-gray-400 mt-1">
+                                {{ formatDate(memo.updatedAt) }}
+                            </div>
+                        </div>
+
+                        <button 
+                            @click.stop="deleteMemo(memo.id)"
+                            class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-opacity"
+                            title="削除"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="border-t border-gray-200 dark:border-gray-800 px-4 py-3 text-center text-xs text-gray-500 dark:text-gray-400">
+            &copy; 2026 zakuro. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'tools_notepad_data';
+        const DRAFT_KEY = 'tools_notepad_draft';
+
+        Vue.createApp({
+            data() {
+                return {
+                    memos: [],
+                    currentId: null,
+                    currentContent: '',
+                    showList: true,
+                    statusMessage: '',
+                    isDark: document.documentElement.classList.contains('dark')
+                }
+            },
+            watch: {
+                currentContent() {
+                    this.saveDraft();
+                },
+                currentId() {
+                    this.saveDraft();
+                }
+            },
+            mounted() {
+                this.loadFromStorage();
+                this.handleUrlParam();
+
+                window.addEventListener('popstate', () => {
+                    this.handleUrlParam();
+                });
+            },
+            methods: {
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                        localStorage.theme = 'dark';
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.theme = 'light';
+                    }
+                },
+                loadFromStorage() {
+                    try {
+                        const data = localStorage.getItem(STORAGE_KEY);
+                        this.memos = data ? JSON.parse(data) : [];
+                    } catch (e) {
+                        this.memos = [];
+                    }
+                },
+                saveToStorage() {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.memos));
+                },
+                saveDraft() {
+                    try {
+                        localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                            id: this.currentId,
+                            content: this.currentContent
+                        }));
+                    } catch (e) {}
+                },
+                getDraft() {
+                    try {
+                        const data = localStorage.getItem(DRAFT_KEY);
+                        return data ? JSON.parse(data) : null;
+                    } catch (e) {
+                        return null;
+                    }
+                },
+                handleUrlParam() {
+                    const params = new URLSearchParams(window.location.search);
+                    const id = params.get('id');
+                    const draft = this.getDraft();
+
+                    if (id) {
+                        if (draft && draft.id === id) {
+                            this.currentId = draft.id;
+                            this.currentContent = draft.content;
+                            return;
+                        }
+                        const found = this.memos.find(m => m.id === id);
+                        if (found) {
+                            this.currentId = found.id;
+                            this.currentContent = found.content;
+                            return;
+                        }
+                    }
+                    
+                    if (!id && draft) {
+                        this.currentId = draft.id || null;
+                        this.currentContent = draft.content || '';
+                        if (this.currentId) {
+                            this.updateUrl(this.currentId);
+                        }
+                        return;
+                    }
+
+                    this.currentId = null;
+                    this.currentContent = '';
+                },
+                generateId() {
+                    return Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+                },
+                clearCurrentContent() {
+                    this.currentContent = '';
+                    this.saveDraft();
+                },
+                saveMemo() {
+                    if (!this.currentContent.trim() && !this.currentId) {
+                        this.showStatus('内容を入力してください');
+                        return;
+                    }
+
+                    const firstLine = this.currentContent.trim().split('\n')[0] || '無題のメモ';
+                    const title = firstLine.length > 25 ? firstLine.substring(0, 25) + '...' : firstLine;
+                    const now = Date.now();
+
+                    if (this.currentId) {
+                        const index = this.memos.findIndex(m => m.id === this.currentId);
+                        if (index !== -1) {
+                            this.memos[index] = {
+                                id: this.currentId,
+                                title: title,
+                                content: this.currentContent,
+                                updatedAt: now
+                            };
+                        }
+                    } else {
+                        const newId = this.generateId();
+                        this.currentId = newId;
+                        this.memos.unshift({
+                            id: newId,
+                            title: title,
+                            content: this.currentContent,
+                            updatedAt: now
+                        });
+                        this.updateUrl(newId);
+                    }
+
+                    this.memos.sort((a, b) => b.updatedAt - a.updatedAt);
+                    this.saveToStorage();
+                    this.saveDraft();
+                    this.showStatus('保存しました');
+                },
+                createNewMemo() {
+                    this.currentId = null;
+                    this.currentContent = '';
+                    this.updateUrl(null);
+                    this.saveDraft();
+                    this.showStatus('新規メモ作成');
+                },
+                selectMemo(id) {
+                    const memo = this.memos.find(m => m.id === id);
+                    if (memo) {
+                        this.currentId = memo.id;
+                        this.currentContent = memo.content;
+                        this.updateUrl(memo.id);
+                        this.saveDraft();
+                    }
+                },
+                deleteMemo(id) {
+                    this.memos = this.memos.filter(m => m.id !== id);
+                    this.saveToStorage();
+
+                    if (this.currentId === id) {
+                        this.createNewMemo();
+                    } else {
+                        this.showStatus('削除しました');
+                    }
+                },
+                confirmClearAll() {
+                    if (confirm('すべてのメモを削除しますか？')) {
+                        this.memos = [];
+                        this.saveToStorage();
+                        this.createNewMemo();
+                        this.showStatus('すべて削除しました');
+                    }
+                },
+                updateUrl(id) {
+                    const url = new URL(window.location.href);
+                    if (id) {
+                        url.searchParams.set('id', id);
+                    } else {
+                        url.searchParams.delete('id');
+                    }
+                    window.history.pushState({}, '', url.toString());
+                },
+                formatDate(ts) {
+                    if (!ts) return '';
+                    const d = new Date(ts);
+                    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                },
+                showStatus(msg) {
+                    this.statusMessage = msg;
+                    setTimeout(() => {
+                        if (this.statusMessage === msg) {
+                            this.statusMessage = '';
+                        }
+                    }, 2000);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
