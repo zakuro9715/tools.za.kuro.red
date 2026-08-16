@@ -414,6 +414,11 @@
                 const checkText = async () => {
                     if (!inputText.value.trim()) return;
 
+									if (!apiKey.value.trim()) {
+										errorMessage.value = 'APIキーが入力されていません。Gemini APIキーを入力してください。';
+										return;
+									}
+
                     loading.value = true;
                     errorMessage.value = '';
                     hasChecked.value = false;
