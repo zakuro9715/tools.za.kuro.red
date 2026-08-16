@@ -109,7 +109,7 @@
             <!-- Controls & Settings -->
             <div class="space-y-3">
                 <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-400">
-                    <div class="flex items-center space-x-3">
+										<div class="flex flex-wrap items-center gap-3">
                         <div class="flex items-center space-x-2">
 														<label for="api-key" class="shrink-0 font-medium text-xs uppercase tracking-wider text-gray-400">Gemini API Key:</label>
                             <input 
@@ -117,9 +117,18 @@
                                 type="password" 
                                 v-model="apiKey" 
                                 placeholder="APIキーを入力 (必須)" 
-                                class="px-2 py-1 text-xs border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-brand-500 w-40 md:w-56"
+                                class="px-2 py-1 text-xs border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-brand-500 w-36 md:w-48"
                             />
                         </div>
+												<div class="flex items-center space-x-2">
+													<label for="selected-model" class="shrink-0 font-medium text-xs uppercase tracking-wider text-gray-400">モデル:</label>
+													<select id="selected-model" v-model="selectedModel"
+														class="px-2 py-1 text-xs border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-brand-500 cursor-pointer">
+														<option v-for="model in modelOptions" :key="model.value" :value="model.value">
+															{{ model.label }}
+														</option>
+													</select>
+												</div>
                         <button 
                             @click="showPromptSettings = !showPromptSettings" 
                             class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center space-x-1 underline underline-offset-2"
@@ -302,6 +311,16 @@
                 const showPromptSettings = ref(false);
                 const showDiffHighlight = ref(true);
 
+						const modelOptions = [
+							{ label: 'Gemini 3.7 Flash', value: 'gemini-3.7-flash' },
+							{ label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
+							{ label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
+							{ label: 'Gemini 3.5 Flash Lite', value: 'gemini-3.5-flash-lite' },
+							{ label: 'Gemini 3.1 Flash Lite', value: 'gemini-3.1-flash-lite' },
+							{ label: 'Gemma 4 31B', value: 'gemma-4-31b-it' }
+						];
+						const selectedModel = ref(localStorage.getItem('text_checker_model') || 'gemini-3.5-flash-lite');
+
                 const correctedDiffChunks = ref([]);
 
                 const systemPrompt = ref(localStorage.getItem('text_checker_prompt') || DEFAULT_SYSTEM_PROMPT);
@@ -312,6 +331,10 @@
 
 						watch(apiKey, (newVal) => {
 							localStorage.setItem('gemini_api_key', newVal);
+						});
+
+						watch(selectedModel, (newVal) => {
+							localStorage.setItem('text_checker_model', newVal);
 						});
 
                 const resetPrompt = () => {
@@ -468,7 +491,7 @@
 
                     while (attempt < maxRetries && !success) {
                         try {
-                            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey.value}`;
+													const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel.value}:generateContent?key=${apiKey.value}`;
                             const response = await fetch(url, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -549,6 +572,8 @@
                     hasChecked,
                     errorMessage,
                     apiKey,
+									modelOptions,
+									selectedModel,
                     copied,
                     isDark,
                     showPromptSettings,
