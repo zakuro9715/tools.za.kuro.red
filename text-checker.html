@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章チェッカー</title>
+
+    <!-- Meta Tags & OGP -->
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="description" content="AIを活用したシンプルな文章校正・誤字脱字チェッカー">
+    <meta property="og:title" content="文章チェッカー">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tools.za.kuro.red/text-checker.html">
+    <meta property="og:image" content="https://tools.za.kuro.red/og-images/TextChecker.png">
+    <meta property="og:site_name" content="tools.za.kuro.red">
+    <meta property="og:description" content="AIを活用したシンプルな文章校正・誤字脱字チェッカー">
+    <meta property="og:locale" content="ja_JP">
+    <meta name="twitter:title" content="文章チェッカー">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@zakuro9715">
+    <meta name="twitter:url" content="https://tools.za.kuro.red/text-checker.html">
+    <meta name="twitter:image" content="https://tools.za.kuro.red/og-images/TextChecker.png">
+    <meta name="twitter:description" content="AIを活用したシンプルな文章校正・誤字脱字チェッカー">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+		<!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <script>
+        // Check initial theme preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
+    <div id="app" class="flex-grow flex flex-col">
+        <!-- Header -->
+        <header class="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3">
+            <div class="max-w-5xl mx-auto flex items-center justify-between">
+                <!-- Header Left -->
+                <div class="flex items-center space-x-3">
+                    <a href="/" class="flex items-center space-x-1 font-semibold text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <i class="fa-solid fa-house text-sm"></i>
+                        <span>Tools</span>
+                    </a>
+                    <span class="text-gray-300 dark:text-gray-700">|</span>
+                    <span class="font-medium text-gray-900 dark:text-white">文章チェッカー</span>
+                </div>
+
+                <!-- Header Right -->
+                <div class="flex items-center space-x-4">
+                    <!-- Dark Mode Toggle Button -->
+                    <button @click="toggleDarkMode" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1" aria-label="Toggle Theme">
+                        <i class="fa-solid" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+                    </button>
+                    <!-- Social Links -->
+                    <a href="https://x.com/zakuro9715" target="_blank" rel="noopener noreferrer" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" aria-label="X (Twitter)">
+                        <i class="fa-brands fa-x-twitter text-lg"></i>
+                    </a>
+                    <a href="https://github.com/zakuro9715/tools.za.kuro.red" target="_blank" rel="noopener noreferrer" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" aria-label="GitHub">
+                        <i class="fa-brands fa-github text-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col space-y-6">
+            
+            <!-- Controls & Settings -->
+            <div class="space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-400">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-2">
+														<label for="api-key" class="shrink-0 font-medium text-xs uppercase tracking-wider text-gray-400">Gemini API Key:</label>
+                            <input 
+                                id="api-key"
+                                type="password" 
+                                v-model="apiKey" 
+                                placeholder="APIキーを入力 (必須)" 
+                                class="px-2 py-1 text-xs border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-brand-500 w-40 md:w-56"
+                            />
+                        </div>
+                        <button 
+                            @click="showPromptSettings = !showPromptSettings" 
+                            class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center space-x-1 underline underline-offset-2"
+                        >
+                            <i class="fa-solid fa-sliders text-[10px]"></i>
+                            <span>{{ showPromptSettings ? 'プロンプト設定をたたむ' : 'プロンプト設定' }}</span>
+                        </button>
+                    </div>
+                    <div class="text-xs">
+                        文字数: {{ inputText.length }}
+                    </div>
+                </div>
+
+                <!-- Prompt Settings Panel -->
+                <div v-if="showPromptSettings" class="p-3 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-800 text-xs space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label for="system-prompt" class="font-medium text-gray-700 dark:text-gray-300">システムプロンプト (指示文)</label>
+                        <button 
+                            @click="resetPrompt" 
+                            class="px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors text-[11px] flex items-center space-x-1"
+                            title="初期プロンプトに戻す"
+                        >
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>初期値にリセット</span>
+                        </button>
+                    </div>
+                    <textarea 
+                        id="system-prompt"
+                        v-model="systemPrompt" 
+                        rows="3" 
+                        class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-brand-500 text-xs resize-y"
+                    ></textarea>
+                </div>
+            </div>
+
+            <!-- Editor Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow min-h-[360px]">
+                <!-- Input Panel (Always Textarea) -->
+                <div class="flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-800 overflow-hidden">
+                    <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                        <span>元の文章</span>
+                        <div class="flex items-center space-x-2">
+                            <button v-if="inputText" @click="clearInput" class="hover:text-gray-700 dark:hover:text-gray-200">
+                                クリア
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <textarea 
+                        v-model="inputText" 
+                        placeholder="ここにチェックしたい文章を入力してください..." 
+                        class="flex-grow w-full p-3 bg-transparent resize-none focus:outline-none text-sm leading-relaxed"
+                    ></textarea>
+                </div>
+
+                <!-- Result Panel -->
+                <div class="flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-800 overflow-hidden">
+                    <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                        <span>修正後の文章</span>
+                        <div class="flex items-center space-x-3">
+                            <button 
+                                v-if="resultText" 
+                                @click="showDiffHighlight = !showDiffHighlight" 
+                                class="hover:text-gray-700 dark:hover:text-gray-200 flex items-center space-x-1"
+                                :title="showDiffHighlight ? 'ハイライトを非表示' : 'ハイライトを表示'"
+                            >
+                                <i class="fa-solid" :class="showDiffHighlight ? 'fa-border-none' : 'fa-highlighter'"></i>
+                                <span>{{ showDiffHighlight ? '標準表示' : 'ハイライト' }}</span>
+                            </button>
+                            <button 
+                                v-if="resultText" 
+                                @click="copyResult" 
+                                class="hover:text-gray-700 dark:hover:text-gray-200 flex items-center space-x-1"
+                            >
+                                <i class="fa-regular fa-copy"></i>
+                                <span>{{ copied ? 'コピー完了' : 'コピー' }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-grow p-3 text-sm leading-relaxed overflow-y-auto whitespace-pre-wrap">
+                        <template v-if="loading">
+                            <div class="h-full flex items-center justify-center text-gray-400 space-x-2">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                <span>チェック中...</span>
+                            </div>
+                        </template>
+                        <template v-else-if="resultText">
+                            <template v-if="showDiffHighlight && correctedDiffChunks.length > 0">
+                                <template v-for="(chunk, idx) in correctedDiffChunks" :key="idx">
+                                    <mark v-if="chunk.isMarked" class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 font-semibold rounded px-0.5 py-0.2 mx-0.5">{{ chunk.text }}</mark>
+                                    <span v-else>{{ chunk.text }}</span>
+                                </template>
+                            </template>
+                            <template v-else>
+                                {{ resultText }}
+                            </template>
+                        </template>
+                        <template v-else>
+                            <span class="text-gray-400">チェック結果がここに表示されます</span>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="flex justify-center">
+                <button 
+                    @click="checkText" 
+                    :disabled="loading || !inputText.trim()"
+                    class="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-white text-white dark:text-gray-900 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                    <span>校正を実行</span>
+                </button>
+            </div>
+
+            <!-- Error Notification -->
+            <div v-if="errorMessage" class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs rounded-md flex justify-between items-center">
+                <span>{{ errorMessage }}</span>
+                <button @click="errorMessage = ''" class="text-red-400 hover:text-red-600 dark:hover:text-red-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Issues List -->
+            <div v-if="issues && issues.length > 0" class="border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-800 overflow-hidden">
+                <div class="px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-xs font-semibold text-gray-600 dark:text-gray-300 flex items-center justify-between">
+                    <span>指摘箇所 ({{ issues.length }}件)</span>
+                </div>
+                <div class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                    <div v-for="(issue, index) in issues" :key="index" class="p-3 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2">
+                        <div class="flex items-start space-x-2">
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0" 
+                                  :class="getTypeClass(issue.type)">
+                                {{ issue.type || '指摘' }}
+                            </span>
+                            <div>
+                                <div class="font-medium text-gray-800 dark:text-gray-200">
+                                    <span class="line-through text-red-500 mr-1.5">{{ issue.original }}</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px] text-gray-400 mr-1.5"></i>
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ issue.suggestion }}</span>
+                                </div>
+                                <div class="text-gray-500 dark:text-gray-400 mt-0.5">
+                                    {{ issue.reason }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else-if="hasChecked && issues.length === 0" class="p-4 border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg text-center text-xs text-emerald-700 dark:text-emerald-400">
+                <i class="fa-solid fa-circle-check mr-1"></i> 誤字脱字・修正が必要な箇所は見つかりませんでした。
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-gray-200 dark:border-gray-800 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
+            &copy; 2026 zakuro. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, watch } = Vue;
+
+        const DEFAULT_SYSTEM_PROMPT = "あなたは日本語の文章校正の専門家です。与えられた文章の誤字、脱字、不自然な文法、不適切な表現を分析・修正してください。";
+
+        createApp({
+            setup() {
+                const inputText = ref('');
+                const resultText = ref('');
+                const issues = ref([]);
+                const loading = ref(false);
+                const hasChecked = ref(false);
+                const errorMessage = ref('');
+						const apiKey = ref(localStorage.getItem('gemini_api_key') || '');
+                const copied = ref(false);
+                const isDark = ref(false);
+                const showPromptSettings = ref(false);
+                const showDiffHighlight = ref(true);
+
+                const correctedDiffChunks = ref([]);
+
+                const systemPrompt = ref(localStorage.getItem('text_checker_prompt') || DEFAULT_SYSTEM_PROMPT);
+
+                watch(systemPrompt, (newVal) => {
+                    localStorage.setItem('text_checker_prompt', newVal);
+                });
+
+						watch(apiKey, (newVal) => {
+							localStorage.setItem('gemini_api_key', newVal);
+						});
+
+                const resetPrompt = () => {
+                    systemPrompt.value = DEFAULT_SYSTEM_PROMPT;
+                    localStorage.removeItem('text_checker_prompt');
+                };
+
+                const clearInput = () => {
+                    inputText.value = '';
+                    resultText.value = '';
+                    hasChecked.value = false;
+                    correctedDiffChunks.value = [];
+                };
+
+                onMounted(() => {
+                    isDark.value = document.documentElement.classList.contains('dark');
+                });
+
+                const toggleDarkMode = () => {
+                    isDark.value = !isDark.value;
+                    if (isDark.value) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                };
+
+                const getTypeClass = (type) => {
+                    switch (type) {
+                        case '誤字':
+                        case '脱字':
+                            return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+                        case '文法':
+                            return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+                        case '表現':
+                        default:
+                            return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300';
+                    }
+                };
+
+                // Diff Algorithm (LCS Based)
+                const computeDiff = (oldStr, newStr) => {
+                    const s1 = Array.from(oldStr);
+                    const s2 = Array.from(newStr);
+                    const len1 = s1.length;
+                    const len2 = s2.length;
+
+                    // LCS DP Table
+                    const dp = Array.from({ length: len1 + 1 }, () => new Int32Array(len2 + 1));
+                    for (let i = 0; i < len1; i++) {
+                        for (let j = 0; j < len2; j++) {
+                            if (s1[i] === s2[j]) {
+                                dp[i + 1][j + 1] = dp[i][j] + 1;
+                            } else {
+                                dp[i + 1][j + 1] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+                            }
+                        }
+                    }
+
+                    let i = len1, j = len2;
+                    const newDiff = [];
+
+                    while (i > 0 || j > 0) {
+                        if (i > 0 && j > 0 && s1[i - 1] === s2[j - 1]) {
+                            newDiff.unshift({ char: s2[j - 1], type: 'same' });
+                            i--; j--;
+                        } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+                            newDiff.unshift({ char: s2[j - 1], type: 'added' });
+                            j--;
+                        } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
+                            i--;
+                        }
+                    }
+
+                    const groupChunks = (diffArray) => {
+                        const result = [];
+                        let currentChunk = { text: '', isMarked: false };
+
+                        for (const item of diffArray) {
+                            const isMarked = item.type === 'added';
+                            if (currentChunk.text === '') {
+                                currentChunk.text = item.char;
+                                currentChunk.isMarked = isMarked;
+                            } else if (currentChunk.isMarked === isMarked) {
+                                currentChunk.text += item.char;
+                            } else {
+                                result.push(currentChunk);
+                                currentChunk = { text: item.char, isMarked: isMarked };
+                            }
+                        }
+                        if (currentChunk.text !== '') {
+                            result.push(currentChunk);
+                        }
+                        return result;
+                    };
+
+                    correctedDiffChunks.value = groupChunks(newDiff);
+                };
+
+                const checkText = async () => {
+                    if (!inputText.value.trim()) return;
+
+                    loading.value = true;
+                    errorMessage.value = '';
+                    hasChecked.value = false;
+                    issues.value = [];
+                    resultText.value = '';
+
+                    const userPrompt = `以下の文章を校正してください:\n\n${inputText.value}`;
+
+                    const payload = {
+                        contents: [{ parts: [{ text: userPrompt }] }],
+                        systemInstruction: {
+                            parts: [{ text: systemPrompt.value }]
+                        },
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    correctedText: { 
+                                        type: "STRING", 
+                                        description: "校正・修正後の全体文章" 
+                                    },
+                                    issues: {
+                                        type: "ARRAY",
+                                        description: "検出された問題のリスト",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                original: { type: "STRING", description: "修正前の該当部分" },
+                                                suggestion: { type: "STRING", description: "修正後の該当部分" },
+                                                reason: { type: "STRING", description: "修正理由・説明" },
+                                                type: { type: "STRING", description: "種別(誤字, 脱字, 文法, 表現)" }
+                                            },
+                                            required: ["original", "suggestion", "reason", "type"]
+                                        }
+                                    }
+                                },
+                                required: ["correctedText", "issues"]
+                            }
+                        }
+                    };
+
+                    // Exponential Backoff API Call Logic
+                    const maxRetries = 3;
+                    let attempt = 0;
+                    let success = false;
+
+                    while (attempt < maxRetries && !success) {
+                        try {
+                            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey.value}`;
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+
+                            if (!response.ok) {
+															if (response.status === 403) {
+																const errData = await response.json().catch(() => ({}));
+																const detail = errData.error?.message || 'APIキーが無効、または未設定です。Gemini APIキーを設定してください。';
+																throw new Error(`403: ${detail}`);
+															}
+                                throw new Error(`HTTP Error: ${response.status}`);
+                            }
+
+                            const result = await response.json();
+                            const candidate = result.candidates?.[0];
+
+                            if (candidate && candidate.content?.parts?.[0]?.text) {
+                                const parsedData = JSON.parse(candidate.content.parts[0].text);
+                                resultText.value = parsedData.correctedText || '';
+                                issues.value = parsedData.issues || [];
+                                
+                                // Compute visual diff
+                                computeDiff(inputText.value, resultText.value);
+
+                                hasChecked.value = true;
+                                success = true;
+                            } else {
+                                throw new Error('応答形式が予期したものと異なります。');
+                            }
+
+                        } catch (err) {
+													if (err.message && err.message.startsWith('403:')) {
+														errorMessage.value = err.message.replace('403: ', '');
+														break; // 認証エラーの場合はリトライせずに終了
+													}
+                            attempt++;
+                            if (attempt >= maxRetries) {
+															errorMessage.value = '校正中にエラーが発生しました。APIキーやネットワーク接続をご確認の上、時間を置いて再度お試しください。';
+                            } else {
+                                await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000));
+                            }
+                        }
+                    }
+
+                    loading.value = false;
+                };
+
+                const copyResult = () => {
+                    if (!resultText.value) return;
+                    
+                    const textarea = document.createElement('textarea');
+                    textarea.value = resultText.value;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        copied.value = true;
+                        setTimeout(() => {
+                            copied.value = false;
+                        }, 2000);
+                    } catch (err) {
+                        errorMessage.value = 'コピーに失敗しました';
+                    } finally {
+                        document.body.removeChild(textarea);
+                    }
+                };
+
+                return {
+                    inputText,
+                    resultText,
+                    issues,
+                    loading,
+                    hasChecked,
+                    errorMessage,
+                    apiKey,
+                    copied,
+                    isDark,
+                    showPromptSettings,
+                    systemPrompt,
+                    showDiffHighlight,
+                    correctedDiffChunks,
+                    resetPrompt,
+                    clearInput,
+                    toggleDarkMode,
+                    checkText,
+                    copyResult,
+                    getTypeClass
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
