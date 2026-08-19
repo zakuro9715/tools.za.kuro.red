@@ -1,13 +1,14 @@
 Home
 Notepad
 TextCounter
+TextChecker
+PasswordGenerator
 AudioVideo
 SqliteViewer
 ReShadePresetViewer
 LocalBookmarks
 ImageCompare
 ImageResize
-TextChecker
 X Mobile URL
 YouTube URL
 WalkingCalc
