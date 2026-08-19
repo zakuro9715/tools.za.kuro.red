@@ -1,35 +1,64 @@
-# tools.za.kuro.red
+# Nuxt Starter Template
 
+[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
 
-## List
+Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
 
-AI links are private
+- [Live demo](https://starter-template.nuxt.dev/)
+- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
 
-- Notepad ([AI](https://gemini.google.com/gem/78ad83b86602/e346a8cad57dc8f9)): Simplegit  notepad
-- Text Counter ([AI](https://gemini.google.com/gem/78ad83b86602/eae59b269cea8496)): Count text
-- Text Checker ([AI](https://gemini.google.com/gem/78ad83b86602/95a7a311160fee11)): text proofreading
-- Password Generator ([AI](https://gemini.google.com/gem/78ad83b86602/79a6e74cb64c520a)): Flexible password generator
-- Audio Video ([AI](https://gemini.google.com/app/cf4c4377684f15f2)): Generate wave video from audio
-- Sqlite Viewer ([AI](https://gemini.google.com/app/1e97a670248be3ef)): Just a sqlite viewer
-- ReShade Preset Viewer ([AI](https://gemini.google.com/app/4e0326bac3fe6d8b)): View ReShade presets
-- Local Bookmarks ([AI](https://gemini.google.com/app/cf5d01037ce53e57)): Bookmarks with LocalStorage
-- Image Resize ([AI](https://gemini.google.com/gem/78ad83b86602/c770cb8994b191e3)): Resize a image
-- Image Compare ([AI](https://gemini.google.com/gem/78ad83b86602/f87c6f5c8c368abb)): Compare images
-- X Mobile URL ([AI](https://gemini.google.com/app/ec33105a1cf23773)): Convert X URL to Mobile URL
-- YouTube URL ([AI](https://gemini.google.com/app/a507dc7ffffe9901)): Normalize YouTube URL
-- Walking Calc ([AI](https://gemini.google.com/app/7fe59e8827f0c21b)): Calculator for walking
-- Metwork Info Checker ([AI](https://gemini.google.com/gem/78ad83b86602/e9b9806e218a4e80)): Check network info
+<a href="https://starter-template.nuxt.dev/" target="_blank">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
+    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
+  </picture>
+</a>
 
-## Gem
+> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
 
-[gem.md](gem.md) is instructions text that used to generate each apps of this site.
+## Quick Start
 
-https://gemini.google.com/gem/1t1s_5edgD1RrgRldR_U6DjHiNwWyYyIe?usp=sharing
-
-## Generate OG Images
-
-Require Inkscape
-
+```bash [Terminal]
+npm create nuxt@latest -- -t ui
 ```
-make og-images
+
+## Deploy your own
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
+
+## Setup
+
+Make sure to install the dependencies:
+
+```bash
+pnpm install
 ```
+
+## Development Server
+
+Start the development server on `http://localhost:3000`:
+
+```bash
+pnpm dev
+```
+
+## Production
+
+Build the application for production:
+
+```bash
+pnpm build
+```
+
+Locally preview production build:
+
+```bash
+pnpm preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## Renovate integration
+
+Install [Renovate GitHub app](https://github.com/apps/renovate/installations/select_target) on your repository and you are good to go.
