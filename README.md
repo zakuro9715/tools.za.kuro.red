@@ -1,21 +1,26 @@
 # tools.za.kuro.red
 
-
 ## List
 
-AI links are private
+AI links are private.
 
-- Notepad ([AI](https://gemini.google.com/gem/78ad83b86602/e346a8cad57dc8f9)): Simplegit  notepad
-- Text Counter ([AI](https://gemini.google.com/gem/78ad83b86602/eae59b269cea8496)): Count text
-- Text Checker ([AI](https://gemini.google.com/gem/78ad83b86602/95a7a311160fee11)): text proofreading
-- Password Generator ([AI](https://gemini.google.com/gem/78ad83b86602/79a6e74cb64c520a)): Flexible password generator
-- Audio Video ([AI](https://gemini.google.com/app/cf4c4377684f15f2)): Generate wave video from audio
-- Sqlite Viewer ([AI](https://gemini.google.com/app/1e97a670248be3ef)): Just a sqlite viewer
-- ReShade Preset Viewer ([AI](https://gemini.google.com/app/4e0326bac3fe6d8b)): View ReShade presets
-- Image Resize ([AI](https://gemini.google.com/gem/78ad83b86602/c770cb8994b191e3)): Resize a image
-- Image Compare ([AI](https://gemini.google.com/gem/78ad83b86602/f87c6f5c8c368abb)): Compare images
-- Walking Calc ([AI](https://gemini.google.com/app/7fe59e8827f0c21b)): Calculator for walking
-- Metwork Info Checker ([AI](https://gemini.google.com/gem/78ad83b86602/e9b9806e218a4e80)): Check network info
+Checked items are migrated to new architecture. others are not
+
+- [ ] Notepad ([AI](https://gemini.google.com/gem/78ad83b86602/e346a8cad57dc8f9)): Simplegit  notepad
+- [ ] Text Counter ([AI](https://gemini.google.com/gem/78ad83b86602/eae59b269cea8496)): Count text
+- [ ] Text Checker ([AI](https://gemini.google.com/gem/78ad83b86602/95a7a311160fee11)): text proofreading
+- [ ] Password Generator ([AI](https://gemini.google.com/gem/78ad83b86602/79a6e74cb64c520a)): Flexible password generator
+- [ ] Audio Video ([AI](https://gemini.google.com/app/cf4c4377684f15f2)): Generate wave video from audio
+- [ ] Sqlite Viewer ([AI](https://gemini.google.com/app/1e97a670248be3ef)): Just a sqlite viewer
+- [ ] ReShade Preset Viewer ([AI](https://gemini.google.com/app/4e0326bac3fe6d8b)): View ReShade presets
+- [ ] Image Resize ([AI](https://gemini.google.com/gem/78ad83b86602/c770cb8994b191e3)): Resize a image
+- [ ] Image Compare ([AI](https://gemini.google.com/gem/78ad83b86602/f87c6f5c8c368abb)): Compare images
+- [ ] Walking Calc ([AI](https://gemini.google.com/app/7fe59e8827f0c21b)): Calculator for walking
+- [ ] Metwork Info Checker ([AI](https://gemini.google.com/gem/78ad83b86602/e9b9806e218a4e80)): Check network info
+
+## /old
+
+`/old` contains outdated files. It will be removed in the future.
 
 ## Gem
 
