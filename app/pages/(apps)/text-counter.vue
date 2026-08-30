@@ -10,7 +10,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <TextCounterWorkspace />
+  <TextCounter />
 </template>
 
 <i18n lang="json">

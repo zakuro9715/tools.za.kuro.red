@@ -17,5 +17,5 @@ useSeoMeta({
 </script>
 
 <template>
-  <NotepadWorkspace />
+  <Notepad />
 </template>

@@ -47,6 +47,11 @@ This project is collection of standalone tool app.
 
 ## Apps
 
+## Structure
+
+- `app/pages/(apps)/app-name.vue` - app page.
+- `app/components/app-name/*.vue` - app components.
+- `app/composables/*.ts` - app composables.
 
 ## html migration
 
@@ -68,5 +73,10 @@ Migrate old html pages to Nuxt 4 app pages.
 
 ### Files
 
-- `old/abc-efg.html` => `app/pages/(apps)/abc-efg.vue`
+for `old/some-app.html`:
+
+- `app/pages/(apps)/some-app.vue`          : page
+- `app/components/SomeApp/SomeApp.vue`     : main component
+- `app/components/SomeApp/SomeAppPart.vue` : component
+- `app/composables/useSomeApp.ts`          : composable
 
