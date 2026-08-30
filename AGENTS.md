@@ -29,7 +29,8 @@ This project is collection of standalone tool app.
 
 ### I18n
 
-- All messaged should be in `<i18n>` block in each component. Do not use embedded messages.
+- Messages in components should be in `<i18n>` block in each component.
+- Messages in composables should use with `useI18n(messages:{ /* messages*/ })`.
 - Japanese and English should be provided.
 
 ## Development
