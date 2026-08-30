@@ -28,6 +28,16 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2026-06-30',
 
+
+  components: [
+    '~/components',
+    '~/apps/'
+  ],
+
+  imports: {
+    dirs: ['~/apps/**/*.ts']
+  },
+
   eslint: {
     config: {
       stylistic: {

@@ -8,9 +8,12 @@ This project is collection of standalone tool app.
 
 ### Structure
 
-- `app/pages/(apps)/app-name.vue` - app page.
-- `app/components/app-name/*.vue` - app components.
-- `app/composables/app-name/*.ts` - app composables.
+- `app/pages/app-name.vue` - app page.
+- `app/apps/AppName` - app directory
+- `app/apps/AppName/*.vue` - app components.
+- `app/apps/AppName/useAppName.ts` - app composables.
+- `app/components/` - shared components.
+- `app/composables/` - shared composables.
 
 ### Dev environment
 
@@ -45,14 +48,6 @@ This project is collection of standalone tool app.
 
 - Disallow ANY git operation.
 
-## Apps
-
-## Structure
-
-- `app/pages/(apps)/app-name.vue` - app page.
-- `app/components/app-name/*.vue` - app components.
-- `app/composables/*.ts` - app composables.
-
 ## html migration
 
 Migrate old html pages to Nuxt 4 app pages.
@@ -75,8 +70,7 @@ Migrate old html pages to Nuxt 4 app pages.
 
 for `old/some-app.html`:
 
-- `app/pages/(apps)/some-app.vue`          : page
-- `app/components/SomeApp/SomeApp.vue`     : main component
-- `app/components/SomeApp/SomeAppPart.vue` : component
-- `app/composables/useSomeApp.ts`          : composable
-
+- `app/pages/app-name.vue`          : app page.
+- `app/apps/AppName/AppName.vue`    : main app component.
+- `app/apps/AppName/AppNameFoo.vue` : other components.
+- `app/apps/AppName/useAppName.ts`  : app composables.

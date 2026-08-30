@@ -1,10 +1,3 @@
-<i18n lang="json5">
-{
-  title: 'メモ帳',
-  description: 'ブラウザにメモを保存できるシンプルなメモ帳アプリです。'
-}
-</i18n>
-
 <script setup lang="ts">
 const { t } = useI18n()
 
@@ -19,3 +12,16 @@ useSeoMeta({
 <template>
   <Notepad />
 </template>
+
+<i18n lang="json5">
+{
+  en: {
+    title: 'Notepad',
+    description: 'A simple notepad app that saves notes in your browser.'
+  },
+  ja: {
+    title: 'メモ帳',
+    description: 'ブラウザにメモを保存できるシンプルなメモ帳アプリです。'
+  }
+}
+</i18n>
