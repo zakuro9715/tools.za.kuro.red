@@ -27,14 +27,47 @@ function isMemo(value: unknown): value is Memo {
     && typeof memo.updatedAt === 'number'
 }
 
-function formatMemoDate(timestamp: number): string {
-  const date = new Date(timestamp)
-  return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-}
-
 export function useNotepad() {
   const route = useRoute()
   const router = useRouter()
+  const { locale, t } = useI18n({
+    messages: {
+      en: {
+        status: {
+          draftSaveFailed: 'Could not save the draft.',
+          draftLoadFailed: 'Could not load the draft.',
+          memosLoadFailed: 'Could not load saved memos.',
+          created: 'New memo created.',
+          contentRequired: 'Enter memo content.',
+          memoSaveFailed: 'Could not save the memo.',
+          saved: 'Saved.',
+          memoDeleteFailed: 'Could not delete the memo.',
+          deleted: 'Deleted.',
+          allDeleted: 'All memos deleted.'
+        },
+        memo: {
+          untitled: 'Untitled memo'
+        }
+      },
+      ja: {
+        status: {
+          draftSaveFailed: '下書きを保存できませんでした',
+          draftLoadFailed: '下書きを読み込めませんでした',
+          memosLoadFailed: '保存済みメモを読み込めませんでした',
+          created: '新規メモを作成しました',
+          contentRequired: '内容を入力してください',
+          memoSaveFailed: 'メモを保存できませんでした',
+          saved: '保存しました',
+          memoDeleteFailed: 'メモを削除できませんでした',
+          deleted: '削除しました',
+          allDeleted: 'すべて削除しました'
+        },
+        memo: {
+          untitled: '無題のメモ'
+        }
+      }
+    }
+  })
   const memos = ref<Memo[]>([])
   const currentId = shallowRef<string | null>(null)
   const currentContent = shallowRef('')
@@ -71,7 +104,7 @@ export function useNotepad() {
     persist(draftKey, {
       id: currentId.value,
       content: currentContent.value
-    } satisfies Draft, '下書きを保存できませんでした')
+    } satisfies Draft, t('status.draftSaveFailed'))
   }
 
   const getDraft = (): Draft | null => {
@@ -92,7 +125,7 @@ export function useNotepad() {
       return null
     } catch (error) {
       console.error('Failed to load notepad draft.', error)
-      showStatus('下書きを読み込めませんでした')
+      showStatus(t('status.draftLoadFailed'))
       return null
     }
   }
@@ -149,7 +182,7 @@ export function useNotepad() {
     } catch (error) {
       console.error('Failed to load saved notepad memos.', error)
       memos.value = []
-      showStatus('保存済みメモを読み込めませんでした')
+      showStatus(t('status.memosLoadFailed'))
     }
   }
 
@@ -157,7 +190,7 @@ export function useNotepad() {
     currentId.value = null
     currentContent.value = ''
     await setRouteId(null)
-    showStatus('新規メモを作成しました')
+    showStatus(t('status.created'))
   }
 
   const selectMemo = async (id: string) => {
@@ -173,11 +206,11 @@ export function useNotepad() {
 
   const saveMemo = async () => {
     if (!currentContent.value.trim() && !currentId.value) {
-      showStatus('内容を入力してください')
+      showStatus(t('status.contentRequired'))
       return
     }
 
-    const titleLine = currentContent.value.trim().split('\n')[0] || '無題のメモ'
+    const titleLine = currentContent.value.trim().split('\n')[0] || t('memo.untitled')
     const title = titleLine.length > 25 ? `${titleLine.slice(0, 25)}...` : titleLine
     const updatedAt = Date.now()
 
@@ -200,14 +233,14 @@ export function useNotepad() {
 
     memos.value.sort((first, second) => second.updatedAt - first.updatedAt)
 
-    if (persist(storageKey, memos.value, 'メモを保存できませんでした')) {
-      showStatus('保存しました')
+    if (persist(storageKey, memos.value, t('status.memoSaveFailed'))) {
+      showStatus(t('status.saved'))
     }
   }
 
   const deleteMemo = async (id: string) => {
     memos.value = memos.value.filter(item => item.id !== id)
-    const wasPersisted = persist(storageKey, memos.value, 'メモを削除できませんでした')
+    const wasPersisted = persist(storageKey, memos.value, t('status.memoDeleteFailed'))
 
     if (currentId.value === id) {
       currentId.value = null
@@ -216,7 +249,7 @@ export function useNotepad() {
     }
 
     if (wasPersisted) {
-      showStatus('削除しました')
+      showStatus(t('status.deleted'))
     }
   }
 
@@ -226,14 +259,24 @@ export function useNotepad() {
 
   const clearAllMemos = async () => {
     memos.value = []
-    const wasPersisted = persist(storageKey, memos.value, 'メモを削除できませんでした')
+    const wasPersisted = persist(storageKey, memos.value, t('status.memoDeleteFailed'))
     currentId.value = null
     currentContent.value = ''
     await setRouteId(null)
 
     if (wasPersisted) {
-      showStatus('すべて削除しました')
+      showStatus(t('status.allDeleted'))
     }
+  }
+
+  const formatMemoDate = (timestamp: number): string => {
+    return new Intl.DateTimeFormat(locale.value, {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23'
+    }).format(timestamp)
   }
 
   watch([currentId, currentContent], () => {

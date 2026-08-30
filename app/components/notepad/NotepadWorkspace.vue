@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { t } = useI18n()
+
 const {
   memos,
   currentId,
@@ -32,12 +34,12 @@ const confirmClearAll = async () => {
         <div class="flex items-center gap-2">
           <UButton
             icon="i-lucide-file-plus-2"
-            label="新規作成"
+            :label="t('actions.create')"
             @click="createNewMemo"
           />
           <UButton
             icon="i-lucide-save"
-            label="保存"
+            :label="t('actions.save')"
             color="neutral"
             variant="outline"
             @click="saveMemo"
@@ -54,7 +56,7 @@ const confirmClearAll = async () => {
         <div class="flex items-center gap-2">
           <UButton
             icon="i-lucide-list"
-            :label="`一覧 (${memos.length})`"
+            :label="t('actions.list', { count: memos.length })"
             color="neutral"
             variant="outline"
             @click="isListOpen = !isListOpen"
@@ -62,7 +64,7 @@ const confirmClearAll = async () => {
           <UButton
             v-if="memos.length"
             icon="i-lucide-trash-2"
-            label="全削除"
+            :label="t('actions.clearAll')"
             color="error"
             variant="outline"
             @click="isClearAllConfirmationOpen = true"
@@ -76,17 +78,17 @@ const confirmClearAll = async () => {
       class="mx-4 mt-4"
       color="error"
       icon="i-lucide-triangle-alert"
-      title="すべてのメモを削除しますか？"
+      :title="t('clearAllConfirmation.title')"
     >
       <template #actions>
         <UButton
-          label="キャンセル"
+          :label="t('actions.cancel')"
           color="neutral"
           variant="outline"
           @click="isClearAllConfirmationOpen = false"
         />
         <UButton
-          label="すべて削除"
+          :label="t('actions.confirmClearAll')"
           color="error"
           @click="confirmClearAll"
         />
@@ -101,13 +103,13 @@ const confirmClearAll = async () => {
           icon="i-lucide-x"
           color="neutral"
           variant="ghost"
-          aria-label="テキストをクリア"
+          :aria-label="t('actions.clearText')"
           @click="clearCurrentContent"
         />
         <UTextarea
           v-model="currentContent"
           class="flex min-h-0 flex-1"
-          placeholder="ここにメモを入力..."
+          :placeholder="t('editor.placeholder')"
           :ui="{
             root: 'h-full',
             base: 'h-full min-h-0 resize-none bg-transparent p-4 pr-12 font-mono leading-relaxed'
@@ -118,16 +120,16 @@ const confirmClearAll = async () => {
       <aside
         v-if="isListOpen"
         class="flex w-full flex-col border-t border-default lg:w-80 lg:border-t-0 lg:border-l"
-        aria-label="保存済みメモ"
+        :aria-label="t('savedMemos.title')"
       >
         <div class="flex items-center justify-between border-b border-default px-4 py-3">
-          <span class="text-sm font-medium">保存済みメモ</span>
+          <span class="text-sm font-medium">{{ t('savedMemos.title') }}</span>
           <UButton
             class="lg:hidden"
             icon="i-lucide-x"
             color="neutral"
             variant="ghost"
-            aria-label="メモ一覧を閉じる"
+            :aria-label="t('actions.closeList')"
             @click="isListOpen = false"
           />
         </div>
@@ -136,7 +138,7 @@ const confirmClearAll = async () => {
           v-if="memos.length === 0"
           class="p-4 text-center text-sm text-muted"
         >
-          保存されたメモはありません
+          {{ t('savedMemos.empty') }}
         </div>
 
         <div
@@ -162,7 +164,7 @@ const confirmClearAll = async () => {
               color="error"
               variant="ghost"
               size="xs"
-              aria-label="メモを削除"
+              :aria-label="t('actions.deleteMemo')"
               @click.stop="deleteMemo(memo.id)"
             />
           </div>
@@ -171,3 +173,54 @@ const confirmClearAll = async () => {
     </div>
   </UCard>
 </template>
+
+<i18n lang="json">
+{
+  "en": {
+    "actions": {
+      "create": "New memo",
+      "save": "Save",
+      "list": "List ({count})",
+      "clearAll": "Clear all",
+      "cancel": "Cancel",
+      "confirmClearAll": "Clear all",
+      "clearText": "Clear text",
+      "closeList": "Close memo list",
+      "deleteMemo": "Delete memo"
+    },
+    "clearAllConfirmation": {
+      "title": "Delete all memos?"
+    },
+    "editor": {
+      "placeholder": "Write a memo here..."
+    },
+    "savedMemos": {
+      "title": "Saved memos",
+      "empty": "There are no saved memos."
+    }
+  },
+  "ja": {
+    "actions": {
+      "create": "新規作成",
+      "save": "保存",
+      "list": "一覧 ({count})",
+      "clearAll": "全削除",
+      "cancel": "キャンセル",
+      "confirmClearAll": "すべて削除",
+      "clearText": "テキストをクリア",
+      "closeList": "メモ一覧を閉じる",
+      "deleteMemo": "メモを削除"
+    },
+    "clearAllConfirmation": {
+      "title": "すべてのメモを削除しますか？"
+    },
+    "editor": {
+      "placeholder": "ここにメモを入力..."
+    },
+    "savedMemos": {
+      "title": "保存済みメモ",
+      "empty": "保存されたメモはありません"
+    }
+  }
+}
+</i18n>
