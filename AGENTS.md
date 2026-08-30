@@ -1,5 +1,7 @@
 # AGENTS
 
+@AGENTS.local.md
+
 ## Overview
 
 This project is collection of standalone tool app.
