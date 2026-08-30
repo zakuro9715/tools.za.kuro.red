@@ -38,7 +38,10 @@ const siteConfig = useSiteConfig()
     <UHeader>
       <template #left>
         <NuxtLink :to="route">{{ title }}</NuxtLink>
-        <span aria-hidden="true" class="mx-2">|</span>
+        <span
+          aria-hidden="true"
+          class="mx-2"
+        >|</span>
         <NuxtLink to="/">
           {{ siteConfig.name }}
         </NuxtLink>
