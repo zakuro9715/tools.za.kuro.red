@@ -109,10 +109,11 @@ const confirmClearAll = async () => {
         <UTextarea
           v-model="currentContent"
           class="flex min-h-0 flex-1"
+          variant="ghost"
           :placeholder="t('editor.placeholder')"
           :ui="{
             root: 'h-full',
-            base: 'h-full min-h-0 resize-none bg-transparent p-4 pr-12 font-mono leading-relaxed'
+            base: 'h-full min-h-0 resize-none bg-transparent p-4 pr-12 font-mono leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
           }"
         />
       </main>
