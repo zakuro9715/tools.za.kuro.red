@@ -4,9 +4,11 @@
 
 This project is collection of standalone tool app.
 
-### Directory
+### Structure
 
-- `app/pages/(apps)/` - Contain each app pages.
+- `app/pages/(apps)/app-name.vue` - app page.
+- `app/components/app-name/*.vue` - app components.
+- `app/composables/app-name/*.ts` - app composables.
 
 ### Dev environment
 
@@ -23,6 +25,11 @@ This project is collection of standalone tool app.
 - Simple, clean and short text. Avoid long paragraphs.
 - No emoji. Use icons but une only fewer.
 
+### I18n
+
+- All messaged should be in `<i18n>` block in each component. Do not use embedded messages.
+- Japanese and English should be provided.
+
 ## Development
 
 ### Coding style
@@ -34,6 +41,9 @@ This project is collection of standalone tool app.
 ### Git Operation
 
 - Disallow ANY git operation.
+
+## Apps
+
 
 ## html migration
 
@@ -48,3 +58,12 @@ Migrate old html pages to Nuxt 4 app pages.
 
 - Use `UCard` for card and panel like element.
 - Use `UButton` for button element.
+
+### i18n
+
+- All embedded messages move to `<i18n>` block in each component.
+
+### Files
+
+- `old/abc-efg.html` => `app/pages/(apps)/abc-efg.vue`
+
