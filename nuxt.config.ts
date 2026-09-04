@@ -9,55 +9,53 @@ export default defineNuxtConfig({
     '@nuxtjs/seo',
     '@vite-pwa/nuxt',
     '@vueuse/nuxt',
-    '@nuxtjs/i18n'
+    '@nuxtjs/i18n',
   ],
 
+  components: [
+    '~/components',
+    '~/apps/',
+  ],
+
+  imports: {
+    dirs: ['~/apps/**/*.ts'],
+  },
+
   devtools: {
-    enabled: true
+    enabled: true,
   },
 
   css: ['~/assets/css/main.css'],
 
   site: {
     url: baseUrl,
-    name: 'tools.za.kuro.red'
+    name: 'tools.za.kuro.red',
   },
 
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: true },
   },
   compatibilityDate: '2026-06-30',
-
-
-  components: [
-    '~/components',
-    '~/apps/'
-  ],
-
-  imports: {
-    dirs: ['~/apps/**/*.ts']
-  },
 
   eslint: {
     config: {
       stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
-    }
+        braceStyle: '1tbs',
+      },
+    },
   },
 
   i18n: {
     baseUrl,
     locales: [
       { code: 'en', iso: 'en-US', name: 'English' },
-      { code: 'ja', iso: 'ja-JP', name: '日本語' }
+      { code: 'ja', iso: 'ja-JP', name: '日本語' },
     ],
     defaultLocale: 'ja',
     detectBrowserLanguage: {
       useCookie: true,
-      cookieKey: 'i18n_redirected'
+      cookieKey: 'i18n_redirected',
     },
-    strategy: 'prefix_except_default'
-  }
+    strategy: 'prefix_except_default',
+  },
 })

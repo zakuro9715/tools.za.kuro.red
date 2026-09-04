@@ -16,7 +16,7 @@ const pasteText = async () => {
       title: t('clipboard.errorTitle'),
       description: t('clipboard.errorDescription'),
       color: 'error',
-      icon: 'i-lucide-circle-alert'
+      icon: 'i-lucide-circle-alert',
     })
   }
 }

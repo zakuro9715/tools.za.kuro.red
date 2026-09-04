@@ -14,21 +14,21 @@ const title = 'Home'
 
 useHead(() => ({
   htmlAttrs: {
-    lang: i18nHead.value.htmlAttrs.lang
+    lang: i18nHead.value.htmlAttrs.lang,
   },
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-    ...(i18nHead.value.meta || [])
+    ...(i18nHead.value.meta || []),
   ],
   link: [
     { rel: 'icon', href: '/favicon.ico' },
-    ...(i18nHead.value.link || [])
-  ]
+    ...(i18nHead.value.link || []),
+  ],
 }))
 
 useSeoMeta(() => ({
   title,
-  description: t('description')
+  description: t('description'),
 }))
 const siteConfig = useSiteConfig()
 </script>

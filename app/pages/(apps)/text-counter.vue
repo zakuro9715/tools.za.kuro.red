@@ -5,7 +5,7 @@ useSeoMeta({
   title: t('title'),
   description: t('description'),
   ogImage: '/og-images/TextCounter.png',
-  twitterCard: 'summary_large_image'
+  twitterCard: 'summary_large_image',
 })
 </script>
 

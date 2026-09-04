@@ -43,11 +43,11 @@ export function useNotepad() {
           saved: 'Saved.',
           memoDeleteFailed: 'Could not delete the memo.',
           deleted: 'Deleted.',
-          allDeleted: 'All memos deleted.'
+          allDeleted: 'All memos deleted.',
         },
         memo: {
-          untitled: 'Untitled memo'
-        }
+          untitled: 'Untitled memo',
+        },
       },
       ja: {
         status: {
@@ -60,13 +60,13 @@ export function useNotepad() {
           saved: '保存しました',
           memoDeleteFailed: 'メモを削除できませんでした',
           deleted: '削除しました',
-          allDeleted: 'すべて削除しました'
+          allDeleted: 'すべて削除しました',
         },
         memo: {
-          untitled: '無題のメモ'
-        }
-      }
-    }
+          untitled: '無題のメモ',
+        },
+      },
+    },
   })
   const memos = ref<Memo[]>([])
   const currentId = shallowRef<string | null>(null)
@@ -103,7 +103,7 @@ export function useNotepad() {
   const saveDraft = () => {
     persist(draftKey, {
       id: currentId.value,
-      content: currentContent.value
+      content: currentContent.value,
     } satisfies Draft, t('status.draftSaveFailed'))
   }
 
@@ -221,7 +221,7 @@ export function useNotepad() {
           id: currentId.value,
           title,
           content: currentContent.value,
-          updatedAt
+          updatedAt,
         }
       }
     } else {
@@ -275,7 +275,7 @@ export function useNotepad() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hourCycle: 'h23'
+      hourCycle: 'h23',
     }).format(timestamp)
   }
 
@@ -308,6 +308,6 @@ export function useNotepad() {
     deleteMemo,
     clearCurrentContent,
     clearAllMemos,
-    formatMemoDate
+    formatMemoDate,
   }
 }

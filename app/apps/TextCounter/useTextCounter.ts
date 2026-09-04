@@ -27,7 +27,7 @@ export function useTextCounter() {
         maxLineLength: 0,
         manuscriptPages: 0,
         bookPages: 0,
-        readingMinutes: 0
+        readingMinutes: 0,
       }
     }
 
@@ -53,7 +53,7 @@ export function useTextCounter() {
       maxLineLength,
       manuscriptPages: Math.ceil(manuscriptLinesTotal / 20),
       bookPages: Math.ceil(charsWithSpaces.length / 600),
-      readingMinutes: Math.round(charsWithSpaces.length / 400)
+      readingMinutes: Math.round(charsWithSpaces.length / 400),
     }
   })
 
@@ -64,6 +64,6 @@ export function useTextCounter() {
   return {
     text,
     stats,
-    clearText
+    clearText,
   }
 }
