@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxt/a11y',
     '@nuxt/hints',
+    '@nuxt/test-utils/module',
     '@nuxtjs/seo',
     '@vite-pwa/nuxt',
     '@vueuse/nuxt',
