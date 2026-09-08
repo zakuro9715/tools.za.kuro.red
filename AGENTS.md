@@ -68,9 +68,17 @@ Migrate old html pages to Nuxt 4 app pages.
 
 ### Files
 
+#### Apps
+
 for `old/some-app.html`:
 
 - `app/pages/app-name.vue`          : app page.
 - `app/apps/AppName/AppName.vue`    : main app component.
 - `app/apps/AppName/AppNameFoo.vue` : other components.
 - `app/apps/AppName/useAppName.ts`  : app composables.
+
+#### Testing
+
+- `dir/Name.vue` is test target file.
+- `dir/Name.test.ts` is test file for `dir/Name.vue`.
+- `dir/Name.test.md` is test plan for `dir/Name.vue`.
