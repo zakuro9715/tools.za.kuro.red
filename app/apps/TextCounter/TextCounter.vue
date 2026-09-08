@@ -32,6 +32,7 @@ const pasteText = async () => {
       <template #hint>
         <div class="flex items-center gap-2">
           <UButton
+            data-testid="text-counter-paste"
             icon="i-lucide-clipboard-paste"
             :label="t('actions.paste')"
             color="neutral"
@@ -41,6 +42,7 @@ const pasteText = async () => {
           />
           <UButton
             v-if="text"
+            data-testid="text-counter-clear"
             icon="i-lucide-trash-2"
             :label="t('actions.clear')"
             color="neutral"
@@ -64,10 +66,12 @@ const pasteText = async () => {
 
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
       <TextCounterMetric
+        data-testid="text-counter-characters-with-spaces"
         :label="t('metrics.charactersWithSpaces')"
         :value="formatNumber(stats.charCountWithSpaces)"
       />
       <TextCounterMetric
+        data-testid="text-counter-characters"
         :label="t('metrics.characters')"
         :value="formatNumber(stats.charCountWithoutSpaces)"
       />
