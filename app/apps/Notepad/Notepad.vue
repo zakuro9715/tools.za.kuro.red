@@ -33,11 +33,13 @@ const confirmClearAll = async () => {
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <UButton
+            data-testid="notepad-create"
             icon="i-lucide-file-plus-2"
             :label="t('actions.create')"
             @click="createNewMemo"
           />
           <UButton
+            data-testid="notepad-save"
             icon="i-lucide-save"
             :label="t('actions.save')"
             color="neutral"
@@ -55,6 +57,7 @@ const confirmClearAll = async () => {
 
         <div class="flex items-center gap-2">
           <UButton
+            data-testid="notepad-toggle-list"
             icon="i-lucide-list"
             :label="t('actions.list', { count: memos.length })"
             color="neutral"
@@ -63,6 +66,7 @@ const confirmClearAll = async () => {
           />
           <UButton
             v-if="memos.length"
+            data-testid="notepad-clear-all"
             icon="i-lucide-trash-2"
             :label="t('actions.clearAll')"
             color="error"
@@ -82,12 +86,14 @@ const confirmClearAll = async () => {
     >
       <template #actions>
         <UButton
+          data-testid="notepad-cancel-clear-all"
           :label="t('actions.cancel')"
           color="neutral"
           variant="outline"
           @click="isClearAllConfirmationOpen = false"
         />
         <UButton
+          data-testid="notepad-confirm-clear-all"
           :label="t('actions.confirmClearAll')"
           color="error"
           @click="confirmClearAll"
@@ -99,6 +105,7 @@ const confirmClearAll = async () => {
       <main class="relative flex min-h-96 flex-1 flex-col">
         <UButton
           v-if="currentContent"
+          data-testid="notepad-clear-content"
           class="absolute top-3 right-3 z-10"
           icon="i-lucide-x"
           color="neutral"
@@ -108,6 +115,7 @@ const confirmClearAll = async () => {
         />
         <UTextarea
           v-model="currentContent"
+          data-testid="notepad-editor"
           class="flex min-h-0 flex-1"
           variant="ghost"
           :placeholder="t('editor.placeholder')"
@@ -127,6 +135,7 @@ const confirmClearAll = async () => {
           <span class="text-sm font-medium">{{ t('savedMemos.title') }}</span>
           <UButton
             class="lg:hidden"
+            data-testid="notepad-close-list"
             icon="i-lucide-x"
             color="neutral"
             variant="ghost"
@@ -154,6 +163,7 @@ const confirmClearAll = async () => {
           >
             <button
               type="button"
+              data-testid="notepad-select-memo"
               class="min-w-0 flex-1 text-left"
               @click="selectMemo(memo.id)"
             >
@@ -161,6 +171,7 @@ const confirmClearAll = async () => {
               <span class="mt-1 block text-xs text-muted">{{ formatMemoDate(memo.updatedAt) }}</span>
             </button>
             <UButton
+              data-testid="notepad-delete-memo"
               icon="i-lucide-trash-2"
               color="error"
               variant="ghost"
