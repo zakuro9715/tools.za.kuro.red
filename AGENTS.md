@@ -72,13 +72,20 @@ Migrate old html pages to Nuxt 4 app pages.
 
 for `old/some-app.html`:
 
-- `app/pages/app-name.vue`          : app page.
-- `app/apps/AppName/AppName.vue`    : main app component.
-- `app/apps/AppName/AppNameFoo.vue` : other components.
-- `app/apps/AppName/useAppName.ts`  : app composables.
+- `app/pages/app-name.vue` : app page.
+- `app/apps/AppName/`      : app directory
+  - `AppName.vue`          : main app component.
+  - `AppName.test.vue`     : test for main app component.
+  - `Foo.vue`              : other components.
+  - `Foo.test.vue`         : test for other components.
+  - `useAppName.ts`        : app composables.
+  - `useAppName.test.ts`   : test for app composables.
+  - `useFoo.ts`            : other composables.
+  - `useFoo.test.ts`       : test for other composables.
 
 #### Testing
 
-- `dir/Name.vue` is test target file.
-- `dir/Name.test.ts` is test file for `dir/Name.vue`.
-- `dir/Name.test.md` is test plan for `dir/Name.vue`.
+- Each component and composable should have test file in same directory.
+- Use `data-testid` attribute for testing. If not exist, add it to the element for testing.
+- Don't use i18n messages in test. Use `data-testid`.
+- On `AppName.test.vue`, don't use mock for composables and components. Test real behavior of app.
