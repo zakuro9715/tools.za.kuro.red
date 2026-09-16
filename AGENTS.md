@@ -56,6 +56,7 @@ Migrate old html pages to Nuxt 4 app pages.
 - Use `useSeoMeta` to set SEO meta tags. Remove old meta tags from html pages.
 - keep the layout but use nuxt-ui components instead tailwind classes.
 - use theme colors instead of hardcoded colors.
+- Write test for each component and composable. See Testing.
 
 ### Components
 
