@@ -24,7 +24,7 @@ This project is collection of standalone tool app.
 
 ### Design Rules
 
-- Prefere nuxt-ui components. Use only minimal tailwind classes to styling.
+- Prefer nuxt-ui components. Use only minimal tailwind classes to styling.
 - Simple and clean design.
 - No gradients.
 - Simple, clean and short text. Avoid long paragraphs.
