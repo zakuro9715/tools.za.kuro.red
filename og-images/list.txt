@@ -6,7 +6,6 @@ PasswordGenerator
 AudioVideo
 SqliteViewer
 ReShadePresetViewer
-LocalBookmarks
 ImageCompare
 ImageResize
 WalkingCalc
