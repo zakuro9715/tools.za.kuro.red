@@ -1,5 +1,5 @@
 title_placeholder="__title__"
-dir="og-images"
+dir="public/og-images"
 template="$dir/template.svg"
 while read title; do
   name="$(echo "$title" | sed 's/ //g')"
