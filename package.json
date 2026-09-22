@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "nuxt": "nuxt",
+    "wrangler": "wrangler",
     "generate": "nuxt generate",
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -40,7 +41,8 @@
     "playwright-core": "^1.63.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11",
-    "vue-tsc": "^3.3.10"
+    "vue-tsc": "^3.3.10",
+    "wrangler": "^4.135.0"
   },
   "packageManager": "pnpm@11.22.0"
 }
