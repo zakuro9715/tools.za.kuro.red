@@ -8,12 +8,14 @@
     "generate": "nuxt generate",
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "preview": "nuxt preview",
+    "preview": "pnpm run build && wrangler dev",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "typecheck": "nuxt typecheck",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "deploy": "pnpm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.123",
@@ -37,6 +39,7 @@
     "@vue/test-utils": "^2.5.0",
     "eslint": "^10.8.1",
     "happy-dom": "^20.14.0",
+    "nitro-cloudflare-dev": "^0.2.2",
     "playwright": "^1.63.0",
     "playwright-core": "^1.63.0",
     "typescript": "^6.0.3",
