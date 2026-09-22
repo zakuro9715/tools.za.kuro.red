@@ -6,6 +6,9 @@
   "observability": {
     "enabled": true
   },
+  "build": {
+    "command": "pnpm build"
+  },
   "assets": {
     "binding": "ASSETS",
     "directory": "./.output/public/"
