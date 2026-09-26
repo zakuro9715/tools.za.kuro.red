@@ -11,7 +11,7 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt',
     '@vueuse/nuxt',
     '@nuxtjs/i18n',
-    "nitro-cloudflare-dev"
+    'nitro-cloudflare-dev',
   ],
 
   components: [
@@ -40,6 +40,15 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2026-06-30',
 
+  nitro: {
+    preset: 'cloudflare_module',
+
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true,
+    },
+  },
+
   eslint: {
     config: {
       stylistic: {
@@ -61,13 +70,4 @@ export default defineNuxtConfig({
     },
     strategy: 'prefix_except_default',
   },
-
-  nitro: {
-    preset: "cloudflare_module",
-
-    cloudflare: {
-      deployConfig: true,
-      nodeCompat: true
-    }
-  }
 })
