@@ -99,6 +99,47 @@ Use `props` and `emits` for communication between parent and child components by
 - Don't use i18n messages in test. Use `data-testid`.
 - On `AppName.test.vue`, don't use mock for composables and components. Test real behavior of app.
 
+#### Test docs
+
+- Create short summary of for each test in `app/apps/AppName/tests.md`.
+- Summary should be extracted from test code. Use `describe` and `it` to generate summary.
+- If documented test does not exists, implement test according to the summary.
+
+```AppName.test.ts
+describe('App', () => {
+  it('should be works', () {
+    ...
+  })
+
+  // ...
+}
+```
+
+```Foo.test.ts
+describe('Foo', () => {
+  it('should be works', () {
+    ...
+  })
+
+  // ...
+}
+```
+
+```tests.md
+# Tests
+
+## AppName.vue
+
+- App
+  - it should be works
+  - ...
+## Foo.vue
+
+- Foo
+  - it should be works
+  - ...
+```
+
 ### Finish Rule
 
 #### App
