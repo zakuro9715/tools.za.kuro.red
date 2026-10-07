@@ -2,7 +2,7 @@
 import { reactive, useTemplateRef } from 'vue'
 
 const { t } = useI18n()
-const viewer = reactive(useReshadePresetViewer())
+const viewer = reactive(useReShadePresetViewer())
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
 const sourceItems = computed(() => [
   { label: t('presets.cinematic'), value: 'cinematic' },

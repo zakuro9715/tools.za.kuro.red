@@ -1,10 +1,10 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
-import ReshadePresetViewer from './ReshadePresetViewer.vue'
+import ReShadePresetViewer from './ReShadePresetViewer.vue'
 
-describe('ReshadePresetViewer', () => {
+describe('ReShadePresetViewer', () => {
   it('updates the generated INI when an effect is disabled', async () => {
-    const wrapper = await mountSuspended(ReshadePresetViewer)
+    const wrapper = await mountSuspended(ReShadePresetViewer)
     const effect = wrapper.get('[data-testid="reshade-toggle"]')
     await effect.trigger('click')
 

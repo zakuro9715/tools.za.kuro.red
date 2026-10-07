@@ -4,5 +4,5 @@ useSeoMeta({ title: t('apps.reshade-preset-viewer.title'), description: t('apps.
 </script>
 
 <template>
-  <ReshadePresetViewer />
+  <ReShadePresetViewer />
 </template>

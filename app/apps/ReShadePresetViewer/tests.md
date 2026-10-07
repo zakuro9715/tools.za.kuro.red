@@ -1,12 +1,12 @@
 # Tests
 
-## ReshadePresetViewer.test.ts
+## ReShadePresetViewer.test.ts
 
-- ReshadePresetViewer
+- ReShadePresetViewer
   - it updates the generated INI when an effect is disabled
 
-## useReshadePresetViewer.test.ts
+## useReShadePresetViewer.test.ts
 
-- useReshadePresetViewer
+- useReShadePresetViewer
   - it parses and serializes presets including unsorted sections
   - it toggles effects and edits the selected value

@@ -123,7 +123,7 @@ export function serializePreset(data: PresetData): string {
   return `${lines.join('\n').trim()}\n`
 }
 
-export function useReshadePresetViewer() {
+export function useReShadePresetViewer() {
   const preset = shallowRef<PresetData>(parsePreset(presets.cinematic))
   const filename = shallowRef('cinematic_preset.ini')
   const selectedEffect = shallowRef(preset.value.techniqueSorting[0] || '')
