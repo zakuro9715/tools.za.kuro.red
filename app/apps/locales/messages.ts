@@ -91,6 +91,16 @@ const data: { [key: string]: { [key in Lang]: AppMeta } } = {
       description: '画像をブラウザ内でリサイズし、PNG、JPEG、WebP としてダウンロードできます。',
     },
   },
+  'midi-to-audio': {
+    en: {
+      title: 'MIDI to audio',
+      description: 'Convert MIDI files to WAV in your browser with the GeneralUser GS sound font.',
+    },
+    ja: {
+      title: 'MIDI音声変換',
+      description: 'MIDIファイルを GeneralUser GS 音源でブラウザ内で WAV に変換できます。',
+    },
+  },
   'walking-calc': {
     en: {
       title: 'Walking calculator',

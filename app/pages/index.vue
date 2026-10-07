@@ -7,6 +7,7 @@ const apps = [
   { to: '/text-checker', icon: 'i-lucide-spell-check-2', name: 'text-checker' },
   { to: '/password-generator', icon: 'i-lucide-key-round', name: 'password-generator' },
   { to: '/audio-video', icon: 'i-lucide-audio-lines', name: 'audio-video' },
+  { to: '/midi-to-audio', icon: 'i-lucide-audio-waveform', name: 'midi-to-audio' },
   { to: '/sqlite-viewer', icon: 'i-lucide-database', name: 'sqlite-viewer' },
   { to: '/reshade-preset-viewer', icon: 'i-lucide-sliders-horizontal', name: 'reshade-preset-viewer' },
   { to: '/image-compare', icon: 'i-lucide-columns-2', name: 'image-compare' },
