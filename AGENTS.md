@@ -1,6 +1,10 @@
-# AGENTS
+# AGENTS.md
 
 @AGENTS.local.md
+
+
+- AGENTS.md is core document for human and agent. So keep readable for human and agent.
+- Self update AGENTS.md as needed.
 
 ## Overview
 
@@ -42,6 +46,10 @@ This project is collection of standalone tool app.
 - `.editorconfig`
 - `.nuxt/eslint-config.mjs`
 - `pnpm lint --fix` to fix lint errors.
+
+#### Editing rule
+
+- Don't edit multiple apps at once without explitly instruction.
 
 ### Design Rules
 
@@ -140,9 +148,31 @@ describe('Foo', () => {
   - ...
 ```
 
-### Finish Rule
+### Development Flow
 
-#### App
+1. Decide interface and design
+  - Write app, but without implementation. interface and design only.
+  - Write i18n messages for app.
+  - self review and fix
+2. Write test.
+  - Write test for app.
+  - Don't change decided interface and design. But allow adding `data-testid` for testing.
+  - self review and fix
+  - Check wrote tests are fail.
+3. Implement app.
+  - Implement app for decided interface and design.
+  - Don't change decided interface and design.
+  - Don't change ANY test code.
+4. Misc
+  - Generate og-image.
+5. Finishup
+  - Check tests for app are pass.
+  - Check lint is pass.
+  - Check `AppName.svg` and `AppName.png` exists in `public/og-image/`.
+  - Check `tests.md` is updated.
 
-- Check pass test and lint on edited App dirictory.
-- No need to check other App.
+## Others
+
+### og-image
+
+- There is `scripts/generate-og-images.sh`. To generate og-image, run the script with app name.
