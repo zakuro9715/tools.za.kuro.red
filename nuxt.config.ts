@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 const baseUrl = 'https://tools.za.kuro.red'
 export default defineNuxtConfig({
+
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
@@ -13,6 +14,7 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n',
     'nitro-cloudflare-dev',
   ],
+  ssr: true,
 
   components: [
     '~/components',
