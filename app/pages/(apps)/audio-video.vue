@@ -1,11 +1,8 @@
 <script setup lang="ts">
-const { t } = useI18n()
-
-useSeoMeta({
-  title: t('apps.audio-video.title'),
-  description: t('apps.audio-video.description'),
+definePageMeta({
+  titleKey: 'apps.audio-video.title',
+  descriptionKey: 'apps.audio-video.description',
   ogImage: '/og-images/AudioVideo.png',
-  twitterCard: 'summary_large_image',
 })
 </script>
 

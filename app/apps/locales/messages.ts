@@ -134,11 +134,23 @@ const apps: AppMessages = {
   },
 } as const
 
+const home = {
+  en: {
+    title: 'Home',
+    description: 'A collection of tools by zakuro.',
+  },
+  ja: {
+    title: 'Home',
+    description: 'zakuro のツール集。',
+  },
+}
+
 const p = (m: AppMessages, lang: Lang) =>
   Object.fromEntries(Object.entries(m).map(([key, value]) => [key, value[lang]]))
 
 const build = (lang: Lang) => ({
   apps: p(apps, lang),
+  home: home[lang],
 })
 
 export const messages = {

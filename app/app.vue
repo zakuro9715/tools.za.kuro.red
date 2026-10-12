@@ -1,16 +1,10 @@
-<i18n lang="json5">
-{
-  en: {
-    description: 'A collection of tools by zakuro',
-  },
-}
-</i18n>
-
 <script setup>
 const i18nHead = useLocaleHead()
 const { t } = useI18n()
 const route = useRoute()
-const title = 'Home'
+
+const title = computed(() => t(route.meta.titleKey))
+const description = computed(() => t(route.meta.descriptionKey))
 
 useHead(() => ({
   htmlAttrs: {
@@ -28,7 +22,9 @@ useHead(() => ({
 
 useSeoMeta(() => ({
   title,
-  description: t('description'),
+  description,
+  ogImage: route.meta.ogImage,
+  twitterCard: 'summary_large_image',
 }))
 const siteConfig = useSiteConfig()
 </script>

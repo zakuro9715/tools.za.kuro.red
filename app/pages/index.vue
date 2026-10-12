@@ -17,11 +17,10 @@ const apps = [
   { to: '/replace-url', icon: 'i-lucide-link-2', name: 'replace-url' },
 ] as const
 
-useSeoMeta({
-  title: t('title'),
-  description: t('description'),
+definePageMeta({
+  titleKey: 'home.title',
+  descriptionKey: 'home.description',
   ogImage: '/og-images/Home.png',
-  twitterCard: 'summary_large_image',
 })
 </script>
 
@@ -29,10 +28,10 @@ useSeoMeta({
   <div class="space-y-6">
     <div>
       <h1 class="text-2xl font-semibold text-highlighted">
-        {{ t('title') }}
+        {{ t('home.title') }}
       </h1>
       <p class="mt-1 text-muted">
-        {{ t('description') }}
+        {{ t('home.description') }}
       </p>
     </div>
 
@@ -48,16 +47,3 @@ useSeoMeta({
     </div>
   </div>
 </template>
-
-<i18n lang="json">
-{
-  "en": {
-    "title": "Tools",
-    "description": "A collection of tools by zakuro."
-  },
-  "ja": {
-    "title": "ツール",
-    "description": "zakuro によるツール集です。"
-  }
-}
-</i18n>

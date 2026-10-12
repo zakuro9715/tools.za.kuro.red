@@ -1,11 +1,8 @@
 <script setup lang="ts">
-const { t } = useI18n()
-
-useSeoMeta({
-  title: t('apps.image-compare.title'),
-  description: t('apps.image-compare.description'),
+definePageMeta({
+  titleKey: 'apps.image-compare.title',
+  descriptionKey: 'apps.image-compare.description',
   ogImage: '/og-images/ImageCompare.png',
-  twitterCard: 'summary_large_image',
 })
 </script>
 
