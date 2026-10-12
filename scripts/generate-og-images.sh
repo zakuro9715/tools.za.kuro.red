@@ -26,4 +26,5 @@ else
   do
     generate "$app"
   done
+  generate "Home"
 fi
