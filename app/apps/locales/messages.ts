@@ -1,6 +1,7 @@
 type Lang = 'en' | 'ja'
 type AppMeta = { title: string, description: string }
-const data: { [key: string]: { [key in Lang]: AppMeta } } = {
+type AppMessages = { [key: string]: { [key in Lang]: AppMeta } }
+const apps: AppMessages = {
   'notepad': {
     en: {
       title: 'Notepad',
@@ -133,7 +134,14 @@ const data: { [key: string]: { [key in Lang]: AppMeta } } = {
   },
 } as const
 
+const p = (m: AppMessages, lang: Lang) =>
+  Object.fromEntries(Object.entries(m).map(([key, value]) => [key, value[lang]]))
+
+const build = (lang: Lang) => ({
+  apps: p(apps, lang),
+})
+
 export const messages = {
-  en: { apps: Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value.en])) },
-  ja: { apps: Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value.ja])) },
+  en: build('en'),
+  ja: build('ja'),
 }
