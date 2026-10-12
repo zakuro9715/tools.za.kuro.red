@@ -1,6 +1,6 @@
-import { messages as appsMessages } from '@/apps/locales/messages'
+import { messages } from '@/locales/messages'
 
 export default defineI18nConfig(() => ({
   fallbackLocale: ['en', 'ja'],
-  messages: { ...appsMessages },
+  messages,
 }))
