@@ -14,6 +14,7 @@ const apps = [
   { to: '/image-resize', icon: 'i-lucide-image-upscale', name: 'image-resize' },
   { to: '/walking-calc', icon: 'i-lucide-person-standing', name: 'walking-calc' },
   { to: '/network-info-checker', icon: 'i-lucide-network', name: 'network-info-checker' },
+  { to: '/replace-url', icon: 'i-lucide-link-2', name: 'replace-url' },
 ] as const
 
 useSeoMeta({

@@ -121,6 +121,16 @@ const data: { [key: string]: { [key in Lang]: AppMeta } } = {
       description: 'パブリックIP、回線情報、Ping、ブラウザ環境を確認できるツールです。',
     },
   },
+  'replace-url': {
+    en: {
+      title: 'Replace URL',
+      description: 'Replace parts of a URL with text or regular expressions, and save reusable patterns.',
+    },
+    ja: {
+      title: 'URL置換',
+      description: 'URLの一部をテキストや正規表現で置換し、よく使うパターンを保存できます。',
+    },
+  },
 } as const
 
 export const messages = {
