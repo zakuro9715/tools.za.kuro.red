@@ -48,6 +48,7 @@ const siteConfig = useSiteConfig()
       </template>
 
       <template #right>
+        <LocaleSelect />
         <UColorModeButton />
 
         <UButton
