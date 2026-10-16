@@ -85,11 +85,11 @@ const apps: AppMessages = {
   'image-resize': {
     en: {
       title: 'Image resizer',
-      description: 'Resize images in your browser and download them as PNG, JPEG, or WebP.',
+      description: 'Resize images in your browser, then download SVG, PNG, JPEG, or WebP files.',
     },
     ja: {
       title: '画像リサイズ',
-      description: '画像をブラウザ内でリサイズし、PNG、JPEG、WebP としてダウンロードできます。',
+      description: '画像をブラウザ内でリサイズし、SVG、PNG、JPEG、WebP としてダウンロードできます。',
     },
   },
   'midi-to-audio': {

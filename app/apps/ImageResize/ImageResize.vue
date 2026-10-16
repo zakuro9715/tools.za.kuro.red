@@ -13,6 +13,7 @@ const {
   previewUrl,
   error,
   isLoaded,
+  isSvg,
   originalWidth,
   originalHeight,
   originalSize,
@@ -38,10 +39,12 @@ const presetItems = computed(() => [
   { label: '800 × 600 (4:3)', value: '800x600' },
 ])
 const formatItems = [
+  { label: 'SVG', value: 'image/svg+xml' },
   { label: 'PNG', value: 'image/png' },
   { label: 'JPEG', value: 'image/jpeg' },
   { label: 'WebP', value: 'image/webp' },
 ]
+const availableFormatItems = computed(() => isSvg.value ? formatItems : formatItems.slice(1))
 
 const handleFile = (file: File | undefined) => {
   loadFile(file)
@@ -69,7 +72,7 @@ const handleFile = (file: File | undefined) => {
           data-testid="image-resize-file-input"
           class="sr-only"
           type="file"
-          accept="image/*"
+          accept="image/*,.svg"
           @change="handleFile(($event.target as HTMLInputElement).files?.[0])"
         >
       </label>
@@ -189,11 +192,11 @@ const handleFile = (file: File | undefined) => {
             <USelect
               v-model="outputFormat"
               data-testid="image-resize-format"
-              :items="formatItems"
+              :items="availableFormatItems"
             />
           </UFormField>
           <UFormField
-            v-if="outputFormat !== 'image/png'"
+            v-if="outputFormat !== 'image/png' && outputFormat !== 'image/svg+xml'"
             :label="t('output.quality', { quality: Math.round(quality * 100) })"
           >
             <input
@@ -236,7 +239,7 @@ const handleFile = (file: File | undefined) => {
   "en": {
     "upload": {
       "title": "Drop an image or choose a file",
-      "description": "PNG, JPEG, and WebP are supported."
+      "description": "SVG, PNG, JPEG, and WebP are supported."
     },
     "errors": {
       "invalid": "Choose an image file.",
@@ -277,7 +280,7 @@ const handleFile = (file: File | undefined) => {
   "ja": {
     "upload": {
       "title": "画像をドロップ、またはファイルを選択",
-      "description": "PNG、JPEG、WebP に対応しています。"
+      "description": "SVG、PNG、JPEG、WebP に対応しています。"
     },
     "errors": {
       "invalid": "画像ファイルを選択してください。",

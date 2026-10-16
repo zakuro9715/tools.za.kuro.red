@@ -13,4 +13,10 @@ describe('ImageResize', () => {
 
     expect(wrapper.get('[data-testid="image-resize-error"]').text()).not.toBe('')
   })
+
+  it('accepts SVG files', async () => {
+    const wrapper = await mountSuspended(ImageResize)
+
+    expect(wrapper.get('[data-testid="image-resize-file-input"]').attributes('accept')).toContain('.svg')
+  })
 })

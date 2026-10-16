@@ -1,12 +1,52 @@
 import { computed, shallowRef, watch } from 'vue'
 
-export type OutputFormat = 'image/png' | 'image/jpeg' | 'image/webp'
+export type OutputFormat = 'image/svg+xml' | 'image/png' | 'image/jpeg' | 'image/webp'
 export type ResizeMode = 'pixel' | 'percent'
 
 const maximumDimension = 8192
+const svgNamespace = 'http://www.w3.org/2000/svg'
 
 export function clampDimension(value: number) {
   return Math.min(maximumDimension, Math.max(1, Math.round(Number.isFinite(value) ? value : 1)))
+}
+
+export function isSvgFile(file: File) {
+  return file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')
+}
+
+export function resizeSvg(
+  source: string,
+  width: number,
+  height: number,
+  originalWidth: number,
+  originalHeight: number,
+  background: string | null = null,
+) {
+  const document = new DOMParser().parseFromString(source, 'image/svg+xml')
+  const root = document.documentElement
+  if (root.localName !== 'svg' || document.querySelector('parsererror')) {
+    return null
+  }
+
+  if (!root.hasAttribute('viewBox')) {
+    root.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`)
+  }
+  root.setAttribute('xmlns', svgNamespace)
+  root.setAttribute('width', `${width}px`)
+  root.setAttribute('height', `${height}px`)
+  root.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+  const existingStyle = root.getAttribute('style')
+  root.setAttribute('style', `${existingStyle ? `${existingStyle};` : ''}width:${width}px;height:${height}px`)
+
+  if (background) {
+    const rectangle = document.createElementNS(svgNamespace, 'rect')
+    rectangle.setAttribute('width', '100%')
+    rectangle.setAttribute('height', '100%')
+    rectangle.setAttribute('fill', background)
+    root.insertBefore(rectangle, root.firstChild)
+  }
+
+  return new XMLSerializer().serializeToString(document)
 }
 
 export function formatBytes(bytes: number) {
@@ -21,6 +61,7 @@ export function formatBytes(bytes: number) {
 
 export function useImageResize() {
   const image = shallowRef<HTMLImageElement | null>(null)
+  const svgSource = shallowRef<string | null>(null)
   const fileName = shallowRef('image')
   const originalWidth = shallowRef(0)
   const originalHeight = shallowRef(0)
@@ -44,6 +85,7 @@ export function useImageResize() {
   const finalWidth = computed(() => mode.value === 'pixel' ? clampDimension(width.value) : percentWidth.value)
   const finalHeight = computed(() => mode.value === 'pixel' ? clampDimension(height.value) : percentHeight.value)
   const isLoaded = computed(() => image.value !== null)
+  const isSvg = computed(() => svgSource.value !== null)
 
   const render = () => {
     if (!image.value || !import.meta.client) {
@@ -51,6 +93,33 @@ export function useImageResize() {
     }
 
     try {
+      if (outputFormat.value === 'image/svg+xml') {
+        if (!svgSource.value) {
+          error.value = 'resize'
+          return
+        }
+
+        const resizedSvg = resizeSvg(
+          svgSource.value,
+          finalWidth.value,
+          finalHeight.value,
+          originalWidth.value,
+          originalHeight.value,
+          mode.value === 'pixel' && !keepAspectRatio.value && background.value !== 'transparent'
+            ? background.value
+            : null,
+        )
+        if (!resizedSvg) {
+          error.value = 'resize'
+          return
+        }
+
+        previewUrl.value = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(resizedSvg)}`
+        outputSize.value = new Blob([resizedSvg], { type: 'image/svg+xml' }).size
+        error.value = ''
+        return
+      }
+
       const canvas = document.createElement('canvas')
       const context = canvas.getContext('2d')
       if (!context) {
@@ -93,22 +162,31 @@ export function useImageResize() {
   }
 
   const loadFile = (file: File | undefined) => {
-    if (!file || !file.type.startsWith('image/')) {
+    if (!file || (!file.type.startsWith('image/') && !isSvgFile(file))) {
       error.value = 'invalid'
       return
     }
 
+    const isSvg = isSvgFile(file)
     const reader = new FileReader()
     reader.onerror = () => {
       error.value = 'read'
     }
     reader.onload = () => {
       const source = new Image()
+      let sourceUrl: string | undefined
       source.onerror = () => {
+        if (sourceUrl) {
+          URL.revokeObjectURL(sourceUrl)
+        }
         error.value = 'read'
       }
       source.onload = () => {
+        if (sourceUrl) {
+          URL.revokeObjectURL(sourceUrl)
+        }
         image.value = source
+        svgSource.value = isSvg ? String(reader.result) : null
         fileName.value = file.name.replace(/\.[^.]+$/, '') || 'image'
         originalWidth.value = source.naturalWidth
         originalHeight.value = source.naturalHeight
@@ -118,11 +196,21 @@ export function useImageResize() {
         percent.value = 100
         preset.value = 'custom'
         keepAspectRatio.value = true
+        outputFormat.value = isSvg ? 'image/svg+xml' : 'image/png'
         render()
       }
-      source.src = String(reader.result)
+      if (isSvg) {
+        sourceUrl = URL.createObjectURL(new Blob([String(reader.result)], { type: 'image/svg+xml' }))
+        source.src = sourceUrl
+      } else {
+        source.src = String(reader.result)
+      }
     }
-    reader.readAsDataURL(file)
+    if (isSvg) {
+      reader.readAsText(file)
+    } else {
+      reader.readAsDataURL(file)
+    }
   }
 
   const setWidth = (value: number) => {
@@ -159,7 +247,11 @@ export function useImageResize() {
     if (!previewUrl.value || !import.meta.client) {
       return
     }
-    const extension = outputFormat.value === 'image/jpeg' ? 'jpg' : outputFormat.value.split('/')[1]
+    const extension = outputFormat.value === 'image/jpeg'
+      ? 'jpg'
+      : outputFormat.value === 'image/svg+xml'
+        ? 'svg'
+        : outputFormat.value.split('/')[1]
     const link = document.createElement('a')
     link.download = `${fileName.value}_resized.${extension}`
     link.href = previewUrl.value
@@ -182,6 +274,7 @@ export function useImageResize() {
     keepAspectRatio,
     background,
     outputFormat,
+    isSvg,
     quality,
     previewUrl,
     error,
