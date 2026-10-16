@@ -14,6 +14,7 @@
     "typecheck": "nuxt typecheck",
     "test": "vitest",
     "test:run": "vitest run",
+    "generate-pwa-assets": "pwa-assets-generator",
     "deploy": "pnpm run build && wrangler deploy",
     "cf-typegen": "wrangler types"
   },
@@ -37,6 +38,7 @@
     "@nuxt/eslint": "^1.17.0",
     "@nuxt/test-utils": "^4.2.0",
     "@takumi-rs/wasm": "^2.14.0",
+    "@vite-pwa/assets-generator": "^2.0.0",
     "@vitest/browser-playwright": "^4.1.11",
     "@vue/test-utils": "^2.5.0",
     "eslint": "^10.8.1",

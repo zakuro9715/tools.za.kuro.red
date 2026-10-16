@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import pwa from './pwa.config'
+
 const baseUrl = 'https://tools.za.kuro.red'
 export default defineNuxtConfig({
 
@@ -72,4 +74,6 @@ export default defineNuxtConfig({
     },
     strategy: 'no_prefix',
   },
+
+  pwa,
 })
