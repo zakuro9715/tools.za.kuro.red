@@ -5,6 +5,11 @@ const pwa: ModuleOptions = {
   devOptions: {
     enabled: true,
   },
+  workbox: {
+    globPatterns: [
+      '**/*.{avif,css,gif,html,ico,jpeg,jpg,js,json,png,svg,wasm,webp,woff,woff2}',
+    ],
+  },
   manifest: {
     name: 'tools.za.kuro.red',
     short_name: 'Tools',
