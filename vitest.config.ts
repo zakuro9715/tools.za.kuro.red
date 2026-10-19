@@ -1,7 +1,8 @@
+import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
 import { defineVitestProject } from '@nuxt/test-utils/config'
 
-export default defineVitestProject({
+export default defineConfig({
   test: {
     projects: [
       await defineVitestProject({
@@ -23,5 +24,8 @@ export default defineVitestProject({
         },
       }),
     ],
+    onConsoleLog: (s) => {
+      return !s.startsWith('<Suspense>')
+    },
   },
 })
