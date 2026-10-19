@@ -132,6 +132,16 @@ const apps: AppMessages = {
       description: 'URLの一部をテキストや正規表現で置換し、よく使うパターンを保存できます。',
     },
   },
+  'markdown-formatter': {
+    en: {
+      title: 'Markdown formatter',
+      description: 'Format Markdown text: normalize indents, lists and headings, renumber ordered lists, and convert URLs to links or images.',
+    },
+    ja: {
+      title: 'Markdownフォーマッター',
+      description: 'Markdownのインデント、リスト、見出しを整え、番号付きリストの振り直しやURLのリンク・画像化ができます。',
+    },
+  },
 } as const
 
 const home = {

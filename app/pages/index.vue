@@ -15,6 +15,7 @@ const apps = [
   { to: '/walking-calc', icon: 'i-lucide-person-standing', name: 'walking-calc' },
   { to: '/network-info-checker', icon: 'i-lucide-network', name: 'network-info-checker' },
   { to: '/replace-url', icon: 'i-lucide-link-2', name: 'replace-url' },
+  { to: '/markdown-formatter', icon: 'i-lucide-file-pen-line', name: 'markdown-formatter' },
 ] as const
 
 definePageMeta({
