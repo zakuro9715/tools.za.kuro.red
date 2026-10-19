@@ -8,6 +8,7 @@ export default defineConfig({
       await defineVitestProject({
         test: {
           name: 'nuxt',
+          fsModuleCache: false, // workaround for `Cannot find module '/@id/virtual:intlify-i18n-N'
           include: ['app/**/*.test.ts'],
           environment: 'nuxt',
         },
@@ -15,6 +16,7 @@ export default defineConfig({
       await defineVitestProject({
         test: {
           include: ['**/*.browser.test.ts'],
+          fsModuleCache: false,
           browser: {
             enabled: true,
             headless: true,
