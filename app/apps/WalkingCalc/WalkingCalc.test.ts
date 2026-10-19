@@ -19,10 +19,10 @@ describe('WalkingCalc', () => {
     await wrapper.get('[data-testid="walking-pace-minutes"]').setValue('10')
 
     expect((wrapper.get('[data-testid="walking-time-minutes"]').element as HTMLInputElement).value).toBe('50')
-    expect(wrapper.get('[data-testid="walking-time-indicator"]').text()).toContain('自動計算')
+    expect(wrapper.get('[data-testid="walking-time-indicator"]').attributes('data-state')).toBe('calculated')
 
     await wrapper.get('[data-testid="walking-clear"]').trigger('click')
     expect((wrapper.get('[data-testid="walking-distance"]').element as HTMLInputElement).value).toBe('')
-    expect(wrapper.get('[data-testid="walking-distance-indicator"]').text()).toContain('未入力')
+    expect(wrapper.get('[data-testid="walking-distance-indicator"]').attributes('data-state')).toBe('unfilled')
   })
 })

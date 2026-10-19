@@ -111,6 +111,7 @@ const indicatorLabels = computed(() => ({
             <template #hint>
               <span
                 data-testid="walking-distance-indicator"
+                :data-state="indicatorStates.distance"
                 class="text-xs text-muted"
               >{{ indicatorLabels[indicatorStates.distance] }}</span>
             </template>
@@ -130,6 +131,7 @@ const indicatorLabels = computed(() => ({
               <span class="text-sm font-medium">{{ t('calculation.pace') }}</span>
               <span
                 data-testid="walking-pace-indicator"
+                :data-state="indicatorStates.pace"
                 class="text-xs text-muted"
               >{{ indicatorLabels[indicatorStates.pace] }}</span>
             </div>
@@ -161,6 +163,7 @@ const indicatorLabels = computed(() => ({
               <span class="text-sm font-medium">{{ t('calculation.time') }}</span>
               <span
                 data-testid="walking-time-indicator"
+                :data-state="indicatorStates.time"
                 class="text-xs text-muted"
               >{{ indicatorLabels[indicatorStates.time] }}</span>
             </div>
