@@ -1,5 +1,55 @@
 import type { ModuleOptions } from '@vite-pwa/nuxt'
 
+type LocalizedManifest = Exclude<ModuleOptions['manifest'], false | undefined> & {
+  name_localized: Record<string, { value: string }>
+  short_name_localized: Record<string, { value: string }>
+  description_localized: Record<string, { value: string }>
+}
+
+const manifest = {
+  lang: 'ja-JP',
+  name: 'zakuro のツール集',
+  name_localized: {
+    en: { value: 'Tools by zakuro' },
+  },
+  short_name: 'ツール',
+  short_name_localized: {
+    en: { value: 'Tools' },
+  },
+  description: 'zakuro のツール集。',
+  description_localized: {
+    en: { value: 'A collection of standalone tools.' },
+  },
+  start_url: '/',
+  scope: '/',
+  display: 'standalone',
+  background_color: '#ffffff',
+  theme_color: '#d32f2f',
+  icons: [
+    {
+      src: '/pwa-64x64.png',
+      sizes: '64x64',
+      type: 'image/png',
+    },
+    {
+      src: '/pwa-192x192.png',
+      sizes: '192x192',
+      type: 'image/png',
+    },
+    {
+      src: '/pwa-512x512.png',
+      sizes: '512x512',
+      type: 'image/png',
+    },
+    {
+      src: '/maskable-icon-512x512.png',
+      sizes: '512x512',
+      type: 'image/png',
+      purpose: 'maskable',
+    },
+  ],
+} satisfies LocalizedManifest
+
 const pwa: ModuleOptions = {
   registerType: 'autoUpdate',
   devOptions: {
@@ -10,39 +60,7 @@ const pwa: ModuleOptions = {
       '**/*.{avif,css,gif,html,ico,jpeg,jpg,js,json,png,svg,wasm,webp,woff,woff2}',
     ],
   },
-  manifest: {
-    name: 'tools.za.kuro.red',
-    short_name: 'Tools',
-    description: 'A collection of standalone tools.',
-    start_url: '/',
-    scope: '/',
-    display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#d32f2f',
-    icons: [
-      {
-        src: '/pwa-64x64.png',
-        sizes: '64x64',
-        type: 'image/png',
-      },
-      {
-        src: '/pwa-192x192.png',
-        sizes: '192x192',
-        type: 'image/png',
-      },
-      {
-        src: '/pwa-512x512.png',
-        sizes: '512x512',
-        type: 'image/png',
-      },
-      {
-        src: '/maskable-icon-512x512.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
-    ],
-  },
+  manifest,
 }
 
 export default pwa
