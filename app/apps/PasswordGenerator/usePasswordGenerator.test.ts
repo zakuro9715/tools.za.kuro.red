@@ -1,7 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { usePasswordGenerator } from './usePasswordGenerator'
 
 async function mountPasswordGeneratorComposable() {
   let passwordGenerator: ReturnType<typeof usePasswordGenerator> | undefined

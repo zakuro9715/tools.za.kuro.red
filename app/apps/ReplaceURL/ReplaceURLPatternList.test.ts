@@ -1,7 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import ReplaceURLPatternList from './ReplaceURLPatternList.vue'
-import { presetPatterns } from './useReplaceURL'
 
 describe('ReplaceURLPatternList', () => {
   it('emits a selected built-in pattern', async () => {

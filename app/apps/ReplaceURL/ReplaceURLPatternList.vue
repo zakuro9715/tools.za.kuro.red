@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { PresetPattern, SavedPattern } from './useReplaceURL'
-
 defineProps<{
   presets: PresetPattern[]
   savedPatterns: SavedPattern[]

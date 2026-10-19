@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { createWaveform } from './useAudioVideo'
 
 describe('createWaveform', () => {
   it('creates a normalized waveform from audio samples', () => {

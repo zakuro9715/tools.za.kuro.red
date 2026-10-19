@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { useTextCounter } from './useTextCounter'
 
 const waitForDebounce = () => new Promise(resolve => setTimeout(resolve, 250))
 

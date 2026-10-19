@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { clampDimension, formatBytes, isSvgFile, resizeSvg } from './useImageResize'
 
 describe('image resize utilities', () => {
   it('bounds dimensions to a safe canvas range', () => {

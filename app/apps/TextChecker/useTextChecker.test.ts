@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { useTextChecker } from './useTextChecker'
 
 describe('useTextChecker', () => {
   it('creates grouped insertion diff chunks', () => {

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { isHttpUrl } from './useMarkdownLink'
-
 const { t } = useI18n()
 
 const alt = defineModel<string>('alt', { required: true })

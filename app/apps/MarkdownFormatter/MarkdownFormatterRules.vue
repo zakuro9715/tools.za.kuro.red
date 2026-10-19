@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { markdownFormatRuleIds } from './useMarkdownFormatter'
-import type { MarkdownFormatRuleId, MarkdownFormatRules } from './useMarkdownFormatter'
-
 const rules = defineModel<MarkdownFormatRules>({ required: true })
 const open = ref(false)
 const { t } = useI18n()
+const ruleIds = markdownFormatRuleIds
 
 const groups: { key: string, ids: MarkdownFormatRuleId[] }[] = [
   {
@@ -46,7 +44,7 @@ const setAll = (value: boolean) => {
           data-testid="markdown-formatter-rules-count"
           class="text-sm text-muted"
         >
-          {{ activeCount }}/{{ markdownFormatRuleIds.length }}
+          {{ activeCount }}/{{ ruleIds.length }}
         </span>
       </div>
       <UButton

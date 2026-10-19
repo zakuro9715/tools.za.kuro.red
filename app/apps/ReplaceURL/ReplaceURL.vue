@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { presetPatterns, useReplaceURL } from './useReplaceURL'
 
 const { t } = useI18n()
 const replacer = useReplaceURL()
+const presets = presetPatterns
 const isSaveModalOpen = ref(false)
 const errorMessage = computed(() => {
   if (replacer.result.value.error === 'invalidRegex') {
@@ -140,7 +140,7 @@ onMounted(replacer.loadPatterns)
     </UCard>
 
     <ReplaceURLPatternList
-      :presets="presetPatterns"
+      :presets="presets"
       :saved-patterns="replacer.savedPatterns.value"
       @use="replacer.usePattern"
       @delete="replacer.deletePattern"

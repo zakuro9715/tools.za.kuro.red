@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { formatDuration, getMidiInfo, parseMidi, renderMidiToWav } from './useMidiToAudio'
 import { createMidi, createSoundFont } from './testFixtures'
 
 describe('formatDuration', () => {

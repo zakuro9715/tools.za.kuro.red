@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useMarkdownLink } from './useMarkdownLink'
-
 const { t } = useI18n()
 const md = useMarkdownLink()
 </script>

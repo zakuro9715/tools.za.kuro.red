@@ -6,7 +6,6 @@ import {
   markdownFormatRuleIds,
   useMarkdownFormatter,
 } from './useMarkdownFormatter'
-import type { MarkdownFormatRuleId } from './useMarkdownFormatter'
 
 const only = (id: MarkdownFormatRuleId, text: string) => {
   const rules = Object.fromEntries(markdownFormatRuleIds.map(rule => [rule, rule === id]))

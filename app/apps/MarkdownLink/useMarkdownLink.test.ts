@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
-import { fetchPageTitle, useMarkdownLink } from './useMarkdownLink'
 
 const flush = async () => {
   await vi.waitFor(() => expect(true).toBe(true))

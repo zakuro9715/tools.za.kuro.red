@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fetchSoundFont } from './useSoundFont'
 import { createSoundFont, stubSoundFontFetch } from './testFixtures'
 
 describe('fetchSoundFont', () => {

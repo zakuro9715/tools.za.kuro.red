@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { useWalkingCalc } from './useWalkingCalc'
 
 describe('useWalkingCalc', () => {
   it('converts speed to pace and pace to speed', () => {

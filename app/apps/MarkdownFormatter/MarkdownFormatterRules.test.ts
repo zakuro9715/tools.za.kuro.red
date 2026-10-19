@@ -1,7 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import MarkdownFormatterRules from './MarkdownFormatterRules.vue'
-import { createDefaultRules, markdownFormatRuleIds, type MarkdownFormatRules } from './useMarkdownFormatter'
 
 const lastRules = (wrapper: Awaited<ReturnType<typeof mountSuspended>>) => {
   const events = wrapper.emitted('update:modelValue') ?? []

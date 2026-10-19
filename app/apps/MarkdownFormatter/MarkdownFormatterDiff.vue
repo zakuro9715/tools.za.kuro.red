@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { DiffLine } from './useMarkdownFormatter'
-
 defineProps<{ lines: DiffLine[] }>()
 
 const { t } = useI18n()

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { parsePreset, serializePreset, useReShadePresetViewer } from './useReShadePresetViewer'
 
 describe('useReShadePresetViewer', () => {
   it('parses and serializes presets including unsorted sections', () => {

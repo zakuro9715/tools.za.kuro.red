@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { CompareFit, CompareOrientation } from './useImageCompare'
-
 const { t } = useI18n()
 
 const props = defineProps<{

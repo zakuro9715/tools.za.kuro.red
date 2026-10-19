@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { MidiInfo } from './useMidiToAudio'
-
 defineProps<{ fileName: string, info: MidiInfo }>()
 const { t } = useI18n()
 const formatDurationForDisplay = formatDuration

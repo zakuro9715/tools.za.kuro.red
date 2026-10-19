@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { ConvertStatus } from './useMidiToAudio'
-
 const props = defineProps<{
   status: ConvertStatus
   fontProgress: number
