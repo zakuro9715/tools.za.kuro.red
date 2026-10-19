@@ -3,6 +3,7 @@ import type { MidiInfo } from './useMidiToAudio'
 
 defineProps<{ fileName: string, info: MidiInfo }>()
 const { t } = useI18n()
+const formatDurationForDisplay = formatDuration
 </script>
 
 <template>
@@ -29,7 +30,7 @@ const { t } = useI18n()
         data-testid="midi-info-duration"
         class="font-medium"
       >
-        {{ formatDuration(info.duration) }}
+        {{ formatDurationForDisplay(info.duration) }}
       </dd>
     </div>
     <div>
