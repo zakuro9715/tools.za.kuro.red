@@ -56,6 +56,22 @@ const pwa: ModuleOptions = {
     globPatterns: [
       '**/*.{avif,css,gif,html,ico,jpeg,jpg,js,json,png,svg,wasm,webp,woff,woff2}',
     ],
+    runtimeCaching: [
+      {
+        urlPattern: /\.(?:woff2?|ttf|otf)$/i,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'fonts',
+          expiration: {
+            maxEntries: 20,
+            maxAgeSeconds: 60 * 60 * 24 * 365,
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+    ],
   },
   manifest,
 }
