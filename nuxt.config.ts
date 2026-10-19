@@ -76,4 +76,8 @@ export default defineNuxtConfig({
   },
 
   pwa,
+
+  sitemap: {
+    zeroRuntime: true,
+  },
 })
