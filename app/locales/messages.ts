@@ -122,6 +122,16 @@ const apps: AppMessages = {
       description: 'パブリックIP、回線情報、Ping、ブラウザ環境を確認できるツールです。',
     },
   },
+  'markdown-link': {
+    en: {
+      title: 'Markdown link',
+      description: 'Convert a URL to a Markdown link, or build a Markdown image link.',
+    },
+    ja: {
+      title: 'Markdownリンク変換',
+      description: 'URLをMarkdownリンクに変換し、画像付きリンクも作成できます。',
+    },
+  },
   'replace-url': {
     en: {
       title: 'Replace URL',
