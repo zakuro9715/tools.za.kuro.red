@@ -2,13 +2,14 @@
 import { reactive, useTemplateRef } from 'vue'
 
 const { t } = useI18n()
-const viewer = reactive(useReShadePresetViewer())
-const presetHelpers = {
+const viewerState = useReShadePresetViewer()
+const viewer = reactive(viewerState)
+const {
   colorToHex,
   getShaderFilename,
   guessParameterType,
   hexToColor,
-}
+} = viewerState
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
 const sourceItems = computed(() => [
   { label: t('presets.cinematic'), value: 'cinematic' },
@@ -142,7 +143,7 @@ const range = (value: string) => {
                 @click.stop
                 @update:model-value="viewer.toggleEffect(effect, Boolean($event))"
               />
-              <span class="min-w-0 flex-1 truncate">{{ effect.split('@')[0] }} <small class="text-muted">({{ presetHelpers.getShaderFilename(effect) }})</small></span>
+              <span class="min-w-0 flex-1 truncate">{{ effect.split('@')[0] }} <small class="text-muted">({{ getShaderFilename(effect) }})</small></span>
               <UButton
                 size="xs"
                 color="neutral"
@@ -195,18 +196,18 @@ const range = (value: string) => {
           >
             <div class="mb-2 flex justify-between">
               <label class="font-mono text-sm">{{ key }}</label><UBadge
-                :label="presetHelpers.guessParameterType(key, value)"
+                :label="guessParameterType(key, value)"
                 color="neutral"
                 variant="subtle"
               />
             </div>
             <USwitch
-              v-if="presetHelpers.guessParameterType(key, value) === 'bool'"
+              v-if="guessParameterType(key, value) === 'bool'"
               :model-value="value === '1'"
               @update:model-value="viewer.updateParameter(key, $event ? '1' : '0')"
             />
             <div
-              v-else-if="presetHelpers.guessParameterType(key, value) === 'float' || presetHelpers.guessParameterType(key, value) === 'int'"
+              v-else-if="guessParameterType(key, value) === 'float' || guessParameterType(key, value) === 'int'"
               class="flex gap-2"
             >
               <input
@@ -216,7 +217,7 @@ const range = (value: string) => {
                 :min="range(value).min"
                 :max="range(value).max"
                 :step="range(value).step"
-                @input="viewer.updateParameter(key, presetHelpers.guessParameterType(key, value) === 'float' ? Number(($event.target as HTMLInputElement).value).toFixed(6) : ($event.target as HTMLInputElement).value)"
+                @input="viewer.updateParameter(key, guessParameterType(key, value) === 'float' ? Number(($event.target as HTMLInputElement).value).toFixed(6) : ($event.target as HTMLInputElement).value)"
               ><UInput
                 class="w-28"
                 type="number"
@@ -225,13 +226,13 @@ const range = (value: string) => {
               />
             </div>
             <div
-              v-else-if="presetHelpers.guessParameterType(key, value) === 'color'"
+              v-else-if="guessParameterType(key, value) === 'color'"
               class="flex gap-2"
             >
               <input
                 type="color"
-                :value="presetHelpers.colorToHex(value)"
-                @input="viewer.updateParameter(key, presetHelpers.hexToColor(($event.target as HTMLInputElement).value, value.split(',').length === 4))"
+                :value="colorToHex(value)"
+                @input="viewer.updateParameter(key, hexToColor(($event.target as HTMLInputElement).value, value.split(',').length === 4))"
               ><UInput
                 class="flex-1 font-mono"
                 :model-value="value"

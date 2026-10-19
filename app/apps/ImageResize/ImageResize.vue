@@ -27,9 +27,9 @@ const {
   setHeight,
   applyPreset,
   download,
+  formatBytes,
 } = useImageResize()
 
-const formatBytesForDisplay = formatBytes
 const isDraggingOver = shallowRef(false)
 const presetItems = computed(() => [
   { label: t('presets.custom'), value: 'custom' },
@@ -226,10 +226,10 @@ const handleFile = (file: File | undefined) => {
         :background="background"
         :original-width="originalWidth"
         :original-height="originalHeight"
-        :original-size="formatBytesForDisplay(originalSize)"
+        :original-size="formatBytes(originalSize)"
         :width="finalWidth"
         :height="finalHeight"
-        :output-size="formatBytesForDisplay(outputSize)"
+        :output-size="formatBytes(outputSize)"
       />
     </div>
   </div>

@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createSoundFont, stubSoundFontFetch } from './testFixtures'
 
+const { fetchSoundFont } = useSoundFont()
+
 describe('fetchSoundFont', () => {
   afterEach(() => {
     vi.unstubAllGlobals()

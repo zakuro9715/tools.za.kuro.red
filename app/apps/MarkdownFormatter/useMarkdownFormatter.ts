@@ -1,6 +1,6 @@
 import { computed, shallowRef } from 'vue'
 
-export const markdownFormatRuleIds = [
+const markdownFormatRuleIds = [
   'indent',
   'trailingSpaces',
   'extraSpaces',
@@ -25,7 +25,7 @@ export interface DiffLine {
   text: string
 }
 
-export function createDefaultRules(): MarkdownFormatRules {
+function createDefaultRules(): MarkdownFormatRules {
   return Object.fromEntries(markdownFormatRuleIds.map(id => [id, true])) as MarkdownFormatRules
 }
 
@@ -173,7 +173,7 @@ function convertUrls(text: string, rules: MarkdownFormatRules) {
   })
 }
 
-export function formatMarkdown(text: string, ruleOverrides: Partial<MarkdownFormatRules> = {}): string {
+function formatMarkdown(text: string, ruleOverrides: Partial<MarkdownFormatRules> = {}): string {
   const rules: MarkdownFormatRules = { ...createDefaultRules(), ...ruleOverrides }
   const lines = text.replace(/\r\n?/g, '\n').split('\n')
   const out: Line[] = []
@@ -352,7 +352,7 @@ export function formatMarkdown(text: string, ruleOverrides: Partial<MarkdownForm
   return body.endsWith('\n') && result[result.length - 1]!.locked ? body : `${body}\n`
 }
 
-export function diffLines(before: string, after: string): DiffLine[] {
+function diffLines(before: string, after: string): DiffLine[] {
   const a = before === '' ? [] : before.split('\n')
   const b = after === '' ? [] : after.split('\n')
 
@@ -412,5 +412,15 @@ export function useMarkdownFormatter() {
   const diff = computed(() => diffLines(input.value, output.value))
   const hasChanges = computed(() => diff.value.some(line => line.type !== 'same'))
 
-  return { input, rules, output, diff, hasChanges }
+  return {
+    input,
+    rules,
+    output,
+    diff,
+    hasChanges,
+    markdownFormatRuleIds,
+    createDefaultRules,
+    formatMarkdown,
+    diffLines,
+  }
 }

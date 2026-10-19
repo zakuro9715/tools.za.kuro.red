@@ -5,11 +5,11 @@ type MarkdownLinkError = 'copyFailed'
 
 const fetchTimeoutMs = 5000
 
-export function isHttpUrl(value: string) {
+function isHttpUrl(value: string) {
   return /^https?:\/\/\S+$/i.test(value)
 }
 
-export async function fetchPageTitle(url: string): Promise<string | null> {
+async function fetchPageTitle(url: string): Promise<string | null> {
   if (!isHttpUrl(url)) {
     return null
   }
@@ -89,5 +89,7 @@ export function useMarkdownLink() {
     result,
     error,
     copyResult,
+    isHttpUrl,
+    fetchPageTitle,
   }
 }

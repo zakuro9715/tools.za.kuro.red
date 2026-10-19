@@ -1,4 +1,4 @@
-export const soundFontUrl = 'https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/main/GeneralUser-GS.sf2'
+const soundFontUrl = 'https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/main/GeneralUser-GS.sf2'
 const cacheName = 'midi-to-audio-soundfont'
 
 async function openCache() {
@@ -40,7 +40,7 @@ async function readBody(response: Response, onProgress?: (ratio: number) => void
   return result.buffer
 }
 
-export async function fetchSoundFont(url = soundFontUrl, onProgress?: (ratio: number) => void) {
+async function fetchSoundFont(url = soundFontUrl, onProgress?: (ratio: number) => void) {
   const cache = await openCache()
   const cached = await cache?.match(url)
   if (cached) {
@@ -82,5 +82,5 @@ export function useSoundFont() {
     }
   }
 
-  return { progress, isLoading, load }
+  return { progress, isLoading, load, soundFontUrl, fetchSoundFont }
 }

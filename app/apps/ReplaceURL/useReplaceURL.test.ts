@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+const { presetPatterns } = useReplaceURL()
+
 describe('useReplaceURL', () => {
   beforeEach(() => localStorage.clear())
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createMidi, createSoundFont } from './testFixtures'
 
+const { formatDuration, getMidiInfo, parseMidi, renderMidiToWav } = useMidiToAudio()
+
 describe('formatDuration', () => {
   it('formats seconds as m:ss', () => {
     expect(formatDuration(65)).toBe('1:05')

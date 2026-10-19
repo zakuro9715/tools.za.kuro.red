@@ -71,8 +71,8 @@ Vibrance=0.100000`,
 } as const
 
 const emptyPreset = (): PresetData => ({ techniques: [], techniqueSorting: [], preprocessors: '', shaders: {} })
-export const getShaderFilename = (technique: string) => technique.includes('@') ? technique.slice(technique.indexOf('@') + 1) : technique
-export function guessParameterType(key: string, value: string): ParameterType {
+const getShaderFilename = (technique: string) => technique.includes('@') ? technique.slice(technique.indexOf('@') + 1) : technique
+function guessParameterType(key: string, value: string): ParameterType {
   const parts = value.split(',')
   if ((parts.length === 3 || parts.length === 4) && parts.every(part => !Number.isNaN(Number(part)))) return /color|bg|fg|tint|diffuse|ambient/i.test(key) ? 'color' : 'vector'
   if ((value === '0' || value === '1') && /use|enable|toggle|debug|active|on|show|draw|blur/i.test(key)) return 'bool'
@@ -80,10 +80,10 @@ export function guessParameterType(key: string, value: string): ParameterType {
   if (Number.isInteger(Number(value))) return 'int'
   return 'string'
 }
-export const colorToHex = (value: string) => `#${value.split(',').slice(0, 3).map(part => Math.max(0, Math.min(255, Math.round(Number(part) * 255))).toString(16).padStart(2, '0')).join('')}`
-export const hexToColor = (value: string, alpha: boolean) => `${[value.slice(1, 3), value.slice(3, 5), value.slice(5, 7)].map(part => (Number.parseInt(part, 16) / 255).toFixed(6)).join(',')}${alpha ? ',1.000000' : ''}`
+const colorToHex = (value: string) => `#${value.split(',').slice(0, 3).map(part => Math.max(0, Math.min(255, Math.round(Number(part) * 255))).toString(16).padStart(2, '0')).join('')}`
+const hexToColor = (value: string, alpha: boolean) => `${[value.slice(1, 3), value.slice(3, 5), value.slice(5, 7)].map(part => (Number.parseInt(part, 16) / 255).toFixed(6)).join(',')}${alpha ? ',1.000000' : ''}`
 
-export function parsePreset(text: string): PresetData {
+function parsePreset(text: string): PresetData {
   const parsed = emptyPreset()
   let shader: string | null = null
   for (const originalLine of text.split(/\r?\n/)) {
@@ -109,7 +109,7 @@ export function parsePreset(text: string): PresetData {
   return parsed
 }
 
-export function serializePreset(data: PresetData): string {
+function serializePreset(data: PresetData): string {
   const lines = [`Techniques=${data.techniques.join(',')}`, `TechniqueSorting=${data.techniqueSorting.join(',')}`, `PreprocessorDefinitions=${data.preprocessors}`, '']
   const written = new Set<string>()
   for (const technique of [...data.techniqueSorting, ...Object.keys(data.shaders)]) {
@@ -171,5 +171,31 @@ export function useReShadePresetViewer() {
     if (!file.name.toLowerCase().endsWith('.ini')) { fileError.value = 'invalid'; return }
     try { load(await file.text(), file.name); source.value = 'custom'; fileError.value = null } catch { fileError.value = 'read' }
   }
-  return { preset, filename, selectedEffect, filter, activeFirst, performanceMode, source, fileError, effects, selectedParameters, preview, load, loadDemo, selectEffect, toggleEffect, toggleAll, moveEffect, updateParameter, readFile }
+  return {
+    preset,
+    filename,
+    selectedEffect,
+    filter,
+    activeFirst,
+    performanceMode,
+    source,
+    fileError,
+    effects,
+    selectedParameters,
+    preview,
+    load,
+    loadDemo,
+    selectEffect,
+    toggleEffect,
+    toggleAll,
+    moveEffect,
+    updateParameter,
+    readFile,
+    getShaderFilename,
+    guessParameterType,
+    colorToHex,
+    hexToColor,
+    parsePreset,
+    serializePreset,
+  }
 }

@@ -21,7 +21,7 @@ type ReplaceURLError = 'invalidName' | 'duplicateName' | 'loadFailed' | 'saveFai
 
 const storageKey = 'tools_replace_url_patterns'
 
-export const presetPatterns: PresetPattern[] = [
+const presetPatterns: PresetPattern[] = [
   { id: 'wayback', before: '^', after: 'https://web.archive.org/web/', isRegex: true },
   { id: 'gyo-tc', before: '^', after: 'https://gyo.tc/', isRegex: true },
   { id: 'steam', before: '^', after: 'steam://openurl/', isRegex: true },
@@ -150,6 +150,7 @@ export function useReplaceURL() {
   }
 
   return {
+    presetPatterns,
     url,
     before,
     after,

@@ -6,15 +6,15 @@ export type ResizeMode = 'pixel' | 'percent'
 const maximumDimension = 8192
 const svgNamespace = 'http://www.w3.org/2000/svg'
 
-export function clampDimension(value: number) {
+function clampDimension(value: number) {
   return Math.min(maximumDimension, Math.max(1, Math.round(Number.isFinite(value) ? value : 1)))
 }
 
-export function isSvgFile(file: File) {
+function isSvgFile(file: File) {
   return file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')
 }
 
-export function resizeSvg(
+function resizeSvg(
   source: string,
   width: number,
   height: number,
@@ -49,7 +49,7 @@ export function resizeSvg(
   return new XMLSerializer().serializeToString(document)
 }
 
-export function formatBytes(bytes: number) {
+function formatBytes(bytes: number) {
   if (!bytes) {
     return '0 B'
   }
@@ -292,5 +292,9 @@ export function useImageResize() {
     setHeight,
     applyPreset,
     download,
+    clampDimension,
+    isSvgFile,
+    resizeSvg,
+    formatBytes,
   }
 }

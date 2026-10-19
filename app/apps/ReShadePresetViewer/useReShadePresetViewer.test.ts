@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+const { parsePreset, serializePreset } = useReShadePresetViewer()
+
 describe('useReShadePresetViewer', () => {
   it('parses and serializes presets including unsorted sections', () => {
     const preset = parsePreset('Techniques=Test@Test.fx\n\n[Test.fx]\nEnabled=1\n\n[Other.fx]\nValue=2')

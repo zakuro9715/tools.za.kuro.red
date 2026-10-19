@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+const { clampPosition } = useImageCompare()
+
 describe('clampPosition', () => {
   it('keeps slider positions inside its valid range', () => {
     expect(clampPosition(-1)).toBe(0)

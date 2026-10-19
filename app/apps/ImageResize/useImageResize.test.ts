@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+const { clampDimension, formatBytes, isSvgFile, resizeSvg } = useImageResize()
+
 describe('image resize utilities', () => {
   it('bounds dimensions to a safe canvas range', () => {
     expect(clampDimension(0)).toBe(1)

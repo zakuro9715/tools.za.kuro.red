@@ -13,7 +13,7 @@ export interface CompareImage {
 const sampleA = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450"><rect width="100%25" height="100%25" fill="%23e5e5e5"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="28" fill="%23737373">IMAGE A (SAMPLE)</text></svg>'
 const sampleB = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450"><rect width="100%25" height="100%25" fill="%23262626"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="28" fill="%23a3a3a3">IMAGE B (SAMPLE)</text></svg>'
 
-export function clampPosition(value: number) {
+function clampPosition(value: number) {
   return Math.min(1, Math.max(0, value))
 }
 
@@ -132,5 +132,6 @@ export function useImageCompare() {
     selectImage,
     setPosition,
     toggleFit,
+    clampPosition,
   }
 }

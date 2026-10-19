@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import {
+
+const {
   createDefaultRules,
   diffLines,
   formatMarkdown,
   markdownFormatRuleIds,
-  useMarkdownFormatter,
-} from './useMarkdownFormatter'
+} = useMarkdownFormatter()
 
 const only = (id: MarkdownFormatRuleId, text: string) => {
   const rules = Object.fromEntries(markdownFormatRuleIds.map(rule => [rule, rule === id]))

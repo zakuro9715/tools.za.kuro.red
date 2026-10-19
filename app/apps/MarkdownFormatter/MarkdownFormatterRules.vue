@@ -2,7 +2,7 @@
 const rules = defineModel<MarkdownFormatRules>({ required: true })
 const open = ref(false)
 const { t } = useI18n()
-const ruleIds = markdownFormatRuleIds
+const { markdownFormatRuleIds } = useMarkdownFormatter()
 
 const groups: { key: string, ids: MarkdownFormatRuleId[] }[] = [
   {
@@ -44,7 +44,7 @@ const setAll = (value: boolean) => {
           data-testid="markdown-formatter-rules-count"
           class="text-sm text-muted"
         >
-          {{ activeCount }}/{{ ruleIds.length }}
+          {{ activeCount }}/{{ markdownFormatRuleIds.length }}
         </span>
       </div>
       <UButton

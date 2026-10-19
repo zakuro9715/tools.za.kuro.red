@@ -19,22 +19,22 @@ export type MidiInfo = {
 const bufferSize = 128
 const tailSeconds = 2
 
-export function parseMidi(buffer: ArrayBuffer) {
+function parseMidi(buffer: ArrayBuffer) {
   return BasicMIDI.fromArrayBuffer(buffer)
 }
 
-export function getMidiInfo(midi: BasicMIDI): MidiInfo {
+function getMidiInfo(midi: BasicMIDI): MidiInfo {
   return { duration: midi.duration, tracks: midi.tracks.length }
 }
 
-export function formatDuration(seconds: number) {
+function formatDuration(seconds: number) {
   const total = Math.max(0, Math.round(seconds))
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
 }
 
 const yieldToUi = () => new Promise<void>(resolve => setTimeout(resolve))
 
-export async function renderMidiToWav(midi: BasicMIDI, soundFont: ArrayBuffer, options: RenderOptions) {
+async function renderMidiToWav(midi: BasicMIDI, soundFont: ArrayBuffer, options: RenderOptions) {
   const { sampleRate, onProgress } = options
   const synth = new SpessaSynthProcessor(sampleRate, { eventsEnabled: false })
   synth.soundBankManager.addSoundBank(SoundBankLoader.fromArrayBuffer(soundFont.slice(0)), 'main')
@@ -160,5 +160,9 @@ export function useMidiToAudio() {
     loadFile,
     convert,
     download,
+    parseMidi,
+    getMidiInfo,
+    formatDuration,
+    renderMidiToWav,
   }
 }

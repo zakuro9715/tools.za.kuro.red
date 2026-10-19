@@ -9,7 +9,7 @@ function formatTime(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
 }
 
-export function createWaveform(samples?: Float32Array) {
+function createWaveform(samples?: Float32Array) {
   if (!samples?.length) {
     return Array.from({ length: waveBarCount }, (_, index) =>
       Math.max(0.1, Math.abs(Math.sin(index * 0.05) * 0.4 + Math.cos(index * 0.15) * 0.3)),
@@ -419,5 +419,6 @@ export function useAudioVideo() {
     startRecording,
     stopRecording,
     setCanvas,
+    createWaveform,
   }
 }

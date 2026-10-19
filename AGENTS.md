@@ -66,6 +66,11 @@ This project is collection of standalone tool app.
 - Apps meta messages should be defined in `app/apps/locales/messages.ts`.
 - Japanese and English should be provided.
 
+### Composables
+
+- Export runtime helpers and constants through the `useXxx()` return value instead of exporting them directly.
+- Consume them by destructuring from the auto-imported composable, e.g. `const { helper } = useXxx()`.
+
 ### Component design
 
 Components are classified into the following types according to their responsibilities:

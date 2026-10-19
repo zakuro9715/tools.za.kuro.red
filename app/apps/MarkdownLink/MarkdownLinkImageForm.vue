@@ -4,6 +4,7 @@ const { t } = useI18n()
 const alt = defineModel<string>('alt', { required: true })
 const imageUrl = defineModel<string>('imageUrl', { required: true })
 const linkUrl = defineModel<string>('linkUrl', { required: true })
+const { isHttpUrl } = useMarkdownLink()
 
 const previewUrl = computed(() => isHttpUrl(imageUrl.value.trim()) ? imageUrl.value.trim() : '')
 </script>

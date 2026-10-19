@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+const { createWaveform } = useAudioVideo()
+
 describe('createWaveform', () => {
   it('creates a normalized waveform from audio samples', () => {
     const waveform = createWaveform(new Float32Array([0, 0.5, -1, 0.25]))
